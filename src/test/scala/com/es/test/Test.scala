@@ -20,6 +20,7 @@ object Test {
       .setMaster("local")
     confs.set("es.nodes", "192.168.10.115,192.168.10.110,192.168.10.81")
     confs.set("es.port", "9200")
+    confs.set("es.mapping.date.rich", "false")//关闭es的date。如果报日期的错误。
     confs.set("cluster.name", clusterName)
     val sc = new SparkContext(confs)
     func1(sc)
@@ -33,6 +34,7 @@ object Test {
     conf.setInt("es.port", 9200)
     conf.set("cluster.name", clusterName)
     conf.set("es.resource", "dataexchange_device_tags/deviceTags")
+    conf.set("es.mapping.date.rich", "false")//关闭es的date。如果报日期的错误。
     conf.set("es.query", query);
    sc.newAPIHadoopRDD(conf, classOf[EsInputFormat[NullWritable, LinkedMapWritable]], classOf[NullWritable], classOf[LinkedMapWritable])
     .foreach(println)
@@ -42,7 +44,33 @@ object Test {
     println(query)
     //val query = s"""{"query":{"match":{"_id":"http%3A%2F%2Fbbs.zhan.com%2Fthread-337326-1-1.html"}}}"""
     sc.esRDD("dataexchange_device_tags/deviceTags", query)
-      .foreach(println)
+         .foreach {
+        case (id, ss) =>
+          ss.foreach{case(key,value)=>
+            if (value.isInstanceOf[scala.collection.AbstractTraversable[Any]]) {
+              val l = value.asInstanceOf[scala.collection.AbstractTraversable[Any]]
+              val arr = JSONArray.fromObject("[]")
+              l.foreach { x =>
+                if(x.isInstanceOf[LinkedHashMap[_, _]]){
+                  val a = x.asInstanceOf[LinkedHashMap[String, Any]]
+                val js = JSONObject.fromObject("{}")
+                a.foreach { case (key, value) => js.put(key, value) }
+                arr.add(js)
+                }else if(x.isInstanceOf[String]){
+                  arr.add(x.toString())
+                }else println(">>>>>>>>>>>>.")
+                
+              }
+            } else if (value.isInstanceOf[String]) {
+              
+            } else {
+              println(">>>>>>>>>",value.getClass.getName)
+            }
+            //val arr=JSONArray.fromObject(a)
+            //println(arr)
+          }
+         
+      }
   }
   /**
    * 拼接处一个query语句
