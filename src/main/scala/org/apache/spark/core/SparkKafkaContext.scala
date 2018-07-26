@@ -21,11 +21,12 @@ import org.apache.spark.streaming.kafka.SparkKafkaManager
 class SparkKafkaContext(var kp:Map[String,String]) {
   var sparkcontext: SparkContext = null
   lazy val skm=new SparkKafkaManager(kp)
-  def this(sparkcontext: SparkContext,kp:Map[String,String]) {
+  lazy val conf=sparkcontext.getConf
+  def this(kp:Map[String,String],sparkcontext: SparkContext) {
     this(kp)
     this.sparkcontext = sparkcontext
   }
-  def this(conf: SparkConf,kp:Map[String,String]) {
+  def this(kp:Map[String,String],conf: SparkConf) {
     this(kp)
     sparkcontext = new SparkContext(conf)
   }
@@ -117,7 +118,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     msgHandle: (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
-        sparkcontext, topics, null, msgHandle)
+        this, topics, null, msgHandle)
   }
   /**
    * @author LMQ
@@ -130,7 +131,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     topics: Set[String]) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
-        sparkcontext, topics, null)
+        this, topics, null)
   }
   /**
    * @author LMQ
@@ -144,7 +145,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     msgHandle: (MessageAndMetadata[String, String]) => R) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, R](
-        sparkcontext, topics, null, msgHandle)
+        this, topics, null, msgHandle)
   }
   /**
    * @author LMQ
@@ -160,7 +161,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     msgHandle: (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
-        sparkcontext, topics, fromOffset, msgHandle)
+        this, topics, fromOffset, msgHandle)
   }
   /**
    * @author LMQ
@@ -174,7 +175,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     fromOffset: Map[TopicAndPartition, Long]) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
-        sparkcontext, topics, fromOffset)
+        this, topics, fromOffset)
   }
   /**
    * @author LMQ
@@ -190,7 +191,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     msgHandle: (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
-        sparkcontext, topics, null, maxMessagesPerPartition, msgHandle)
+        this, topics, null, maxMessagesPerPartition, msgHandle)
   }
   /**
    * @author LMQ
@@ -205,7 +206,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
     maxMessagesPerPartition: Int) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
-        sparkcontext,topics, null, maxMessagesPerPartition)
+        this,topics, null, maxMessagesPerPartition)
   }
 }
 object SparkKafkaContext extends SparkKafkaConfsKey {

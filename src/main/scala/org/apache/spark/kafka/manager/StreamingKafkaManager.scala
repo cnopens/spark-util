@@ -1,5 +1,6 @@
 
 package org.apache.spark.streaming.kafka
+
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.SparkException
 import kafka.message.MessageAndMetadata
@@ -14,15 +15,16 @@ import kafka.serializer.Decoder
 import scala.reflect.ClassTag
 import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.common.util.KafkaConfig
 import org.apache.spark.kafka.manager.SparkKafkaManagerBase
+import org.apache.spark.common.util.KafkaConfig
 
 /**
  * @author LMQ
  * @time 2018.03.07
  * @description 用于spark streaming 读取kafka数据
  */
-private[spark] object StreamingKafkaManager
+private[spark] 
+class StreamingKafkaManager(override var kp:Map[String, String])
     extends SparkKafkaManagerBase {
   logname = "StreamingKafkaManager"
   /**
@@ -36,10 +38,10 @@ private[spark] object StreamingKafkaManager
    */
   def createDirectStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
     ssc: StreamingContext,
-    kp: Map[String, String],
     topics: Set[String],
     fromOffset: Map[TopicAndPartition, Long],
-    msghandle: (MessageAndMetadata[K, V]) => R = msgHandle): InputDStream[R] = {
+    msghandle: (MessageAndMetadata[K, V]) => R = msgHandle  
+  ): InputDStream[R] = {
     if (kp == null || !kp.contains(GROUPID))
       throw new SparkException(s"kafkaParam is Null or ${GROUPID} is not setted")
     val groupId = kp.get(GROUPID).get
@@ -48,10 +50,10 @@ private[spark] object StreamingKafkaManager
         val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
         else defualtFrom
         last.toUpperCase match {
-          case LAST     => getLatestOffsets(topics, kp)
-          case EARLIEST => getEarliestOffsets(topics, kp)
-          case CONSUM   => getConsumerOffset(kp, groupId, topics)
-          case _          => log.error(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics, kp)
+          case LAST     => getLatestOffsets(topics)
+          case EARLIEST => getEarliestOffsets(topics)
+          case CONSUM   => getConsumerOffset(groupId, topics)
+          case _          => log.error(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
         }
       } else fromOffset
     consumerOffsets.foreach(x => log.info(x.toString))
@@ -72,15 +74,14 @@ private[spark] object StreamingKafkaManager
   def createDirectStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
     ssc: StreamingContext,
     conf: KafkaConfig,
-    fromOffset: Map[TopicAndPartition, Long],
-    msghandle: (MessageAndMetadata[K, V]) => R = msgHandle): InputDStream[R] = {
+    fromOffset: Map[TopicAndPartition, Long]
+    )(msghandle: (MessageAndMetadata[K, V]) => R = msgHandle): InputDStream[R] = {
     if (conf.kpIsNull || conf.tpIsNull) {
       throw new SparkException(s"Configuration s kafkaParam is Null or Topics is not setted")
     }
     val kp = conf.getKafkaParams()
     if (!kp.contains(GROUPID) && !conf.containsKey(GROUPID))
       throw new SparkException(s"Configuration s kafkaParam is Null or ${GROUPID} is not setted")
-    instance(kp)
     val groupId = if (kp.contains(GROUPID)) kp.get(GROUPID).get
     else conf.get(GROUPID)
     val topics = conf.topics
@@ -90,10 +91,10 @@ private[spark] object StreamingKafkaManager
         else if (conf.containsKey(CONSUMER_FROM)) conf.get(CONSUMER_FROM)
         else defualtFrom
         last.toUpperCase match {
-          case LAST     => getLatestOffsets(topics, kp)
-          case EARLIEST => getEarliestOffsets(topics, kp)
-          case CONSUM   => getConsumerOffset(kp, groupId, topics)
-          case _          => log.error(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics, kp)
+          case LAST     => getLatestOffsets(topics)
+          case EARLIEST => getEarliestOffsets(topics)
+          case CONSUM   => getConsumerOffset(groupId, topics)
+          case _          => log.error(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
         }
       } else fromOffset
     consumerOffsets.foreach(x => log.info(x.toString))
@@ -109,7 +110,6 @@ private[spark] object StreamingKafkaManager
    */
   def createReceiverStream[K: ClassTag, V: ClassTag, U <: Decoder[_]: ClassTag, T <: Decoder[_]: ClassTag](
     ssc: StreamingContext,
-    kp: Map[String, String],
     topics: Map[String, Int]) = {
     KafkaUtils.createStream[K, V, U, T](ssc, kp, topics, StorageLevel.MEMORY_ONLY)
   }
