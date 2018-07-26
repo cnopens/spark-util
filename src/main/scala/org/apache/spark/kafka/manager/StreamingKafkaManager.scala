@@ -42,7 +42,6 @@ private[spark] object StreamingKafkaManager
     msghandle: (MessageAndMetadata[K, V]) => R = msgHandle): InputDStream[R] = {
     if (kp == null || !kp.contains(GROUPID))
       throw new SparkException(s"kafkaParam is Null or ${GROUPID} is not setted")
-    instance(kp)
     val groupId = kp.get(GROUPID).get
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {

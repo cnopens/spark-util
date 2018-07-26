@@ -1,6 +1,7 @@
 package org.apache.spark.core
 
 import org.apache.spark.streaming.StreamingContext
+
 import org.apache.spark.SparkContext
 import org.apache.spark.streaming.Duration
 import scala.reflect.ClassTag
@@ -10,7 +11,6 @@ import org.apache.spark.streaming.kafka.StreamingKafkaManager
 import kafka.serializer.StringDecoder
 import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.common.util.Configuration
-import org.apache.spark.streaming.kafka.SparkContextKafkaManager
 import org.apache.spark.rdd.RDD
 import org.apache.spark.common.util.KafkaConfig
 import kafka.serializer.Decoder
@@ -20,17 +20,17 @@ import kafka.serializer.Decoder
  * @description 此类主要是用于读取kafka数据， 创建 Dstream 。
  * @description 目前只提供createDirectStream的方式读取kafka
  */
-class StreamingKafkaContext {
+class StreamingKafkaContext(var kp:Map[String,String]) {
   var streamingContext: StreamingContext = null
   var sc: SparkContext = null
 
-  def this(streamingContext: StreamingContext) {
-    this()
+  def this(kp:Map[String,String],streamingContext: StreamingContext) {
+    this(kp)
     this.streamingContext = streamingContext
     this.sc = streamingContext.sparkContext
   }
-  def this(sc: SparkContext, batchDuration: Duration) {
-    this()
+  def this(kp:Map[String,String],sc: SparkContext, batchDuration: Duration) {
+    this(kp)
     this.sc = sc
     streamingContext = new StreamingContext(sc, batchDuration)
   }
@@ -49,7 +49,7 @@ class StreamingKafkaContext {
     topics: Set[String],
     kp: Map[String, String]) = {
     val lastestOffsets = getLastOffset(topics, kp)
-    SparkContextKafkaManager.updateConsumerOffsets(kp, lastestOffsets)
+    SparkContextKafkaManager.updateConsumerOffsets(lastestOffsets)
     lastestOffsets
   }
   /**
@@ -61,7 +61,7 @@ class StreamingKafkaContext {
     topics: Set[String],
     kp: Map[String, String]) = {
     SparkContextKafkaManager
-      .getLatestOffsets(topics, kp)
+      .getLatestOffsets(topics)
   }
   /**
    * @author LMQ
@@ -71,7 +71,7 @@ class StreamingKafkaContext {
     kp: Map[String, String],
     groupId: String,
     rdd: RDD[T]) {
-    SparkContextKafkaManager.updateRDDOffset(kp, groupId, rdd)
+    SparkContextKafkaManager.updateRDDOffset(groupId, rdd)
   }
   /**
    * @author LMQ
@@ -82,7 +82,7 @@ class StreamingKafkaContext {
     rdd: RDD[T]) {
     if (kp.contains("group.id")) {
       val groupid = kp.get("group.id").get
-      SparkContextKafkaManager.updateRDDOffset(kp, groupid, rdd)
+      SparkContextKafkaManager.updateRDDOffset(groupid, rdd)
     } else println("No Group Id To UpdateRDDOffsets")
   }
   /**

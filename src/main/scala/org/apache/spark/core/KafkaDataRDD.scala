@@ -18,7 +18,7 @@ class KafkaDataRDD[K: ClassTag, V: ClassTag, U <: Decoder[_]: ClassTag, T <: Dec
     extends RDD[R](prev) with HasOffsetRanges {
 
   def updateOffsets(kp: Map[String, String], groupid: String) {
-    StreamingKafkaManager.updateRDDOffset(kp, groupid, this)
+    StreamingKafkaManager.updateRDDOffset(groupid, this)
   }
   def updateOffsets(kp: Map[String, String]): Boolean = {
     if (kp.contains("group.id")) {

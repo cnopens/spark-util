@@ -35,9 +35,9 @@ trait SparkKafkaManagerBase extends KafkaSparkTool{
    * @author LMQ
    * @description 将rdd的offset更新至zookeeper
    */
-  def updateRDDOffset[T](kp: Map[String, String], groupId: String, rdd: RDD[T]) {
+  def updateRDDOffset[T]( groupId: String, rdd: RDD[T]) {
     val offsets = getRDDConsumerOffsets(rdd)
-    updateConsumerOffsets(kp, groupId, offsets)
+    updateConsumerOffsets(groupId, offsets)
   }
 
 }

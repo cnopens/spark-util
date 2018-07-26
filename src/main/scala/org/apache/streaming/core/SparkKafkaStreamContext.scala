@@ -17,7 +17,7 @@ class SparkKafkaStreamContext {
     kp:     Map[String, String],
     topics: Set[String]) = {
     val getRDDFunc = {
-      sc.kafkaRDD(kp, topics)
+      sc.kafkaRDD(topics)
     }
     new KafkaDirectStreamRDD(getRDDFunc, batchDuration)
   }

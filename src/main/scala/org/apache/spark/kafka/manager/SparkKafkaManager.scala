@@ -43,11 +43,11 @@ class SparkKafkaManager(override var kp:Map[String, String]) extends SparkKafkaM
         val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
                    else defualtFrom
         last.toUpperCase match {
-          case LAST     => getLatestOffsets(topics, kp)
-          case CONSUM   => getConsumerOffset(kp, groupId, topics)
-          case EARLIEST => getEarliestOffsets(topics, kp)
-          case CUSTOM  => getSelfOffsets(kp)
-          case _          => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics, kp)
+          case LAST     => getLatestOffsets(topics)
+          case CONSUM   => getConsumerOffset(groupId, topics)
+          case EARLIEST => getEarliestOffsets(topics)
+          case CUSTOM  => getSelfOffsets()
+          case _          => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
         }
       } else fromOffset
       
@@ -78,7 +78,6 @@ class SparkKafkaManager(override var kp:Map[String, String]) extends SparkKafkaM
    */
   def createKafkaRDD[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
     sc: SparkContext,
-    kp: Map[String, String],
     topics: Set[String],
     fromOffset: Map[TopicAndPartition, Long],
     maxMessagesPerPartition: Int,
@@ -90,11 +89,11 @@ class SparkKafkaManager(override var kp:Map[String, String]) extends SparkKafkaM
         val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
         else defualtFrom
         last.toUpperCase match {
-          case LAST     => getLatestOffsets(topics, kp)
-          case CONSUM   => getConsumerOffset(kp, groupId, topics)
-          case EARLIEST => getEarliestOffsets(topics, kp)
-          case CUSTOM   => getSelfOffsets(kp)
-          case _          => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics, kp)
+          case LAST     => getLatestOffsets(topics)
+          case CONSUM   => getConsumerOffset(groupId, topics)
+          case EARLIEST => getEarliestOffsets(topics)
+          case CUSTOM   => getSelfOffsets()
+          case _          => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
         }
       } else fromOffset
     val untilOffsets = clamp(latestLeaderOffsets(consumerOffsets), consumerOffsets, maxMessagesPerPartition)
@@ -118,7 +117,7 @@ class SparkKafkaManager(override var kp:Map[String, String]) extends SparkKafkaM
    *            具体的 数据格式在readme.md里面有解释
    *            
    */
-  private def getSelfOffsets(kp: Map[String, String]) = {
+  private def getSelfOffsets() = {
     var consumerOffsets = new HashMap[TopicAndPartition, Long]()
     var todayOffsets = kp.get(KAFKA_OFFSET).get.split('|')
     for (offset <- todayOffsets) {
