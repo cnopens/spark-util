@@ -18,6 +18,10 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   lazy val log = LoggerFactory.getLogger(logname)
   var kp:Map[String, String]
   lazy val kc: KafkaCluster = new KafkaCluster(kp)
+  /**
+   * @author LMQ
+   * @func 重置kafka配置参数
+   */
   def setKafkaParam(kp:Map[String, String]){
     this.kp=kp
   }
