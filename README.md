@@ -29,22 +29,23 @@
 # Example StreamingKafkaContextTest
 > StreamingKafkaContextTest 流式 
 ```
- val sc = new SparkContext(new SparkConf().setMaster("local[2]").setAppName("Test"))
-    val ssc = new StreamingKafkaContext(sc, Seconds(5))
-    var kp = Map[String, String](
-      "metadata.broker.list" -> brokers,
-      "serializer.class" -> "kafka.serializer.StringEncoder",
-      "group.id" -> "testGroupid",
-      StreamingKafkaContext.WRONG_FROM -> "last",//EARLIEST
-      StreamingKafkaContext.CONSUMER_FROM -> "consum")
-    val topics = Set("testtopic")
-    val ds = ssc.createDirectStream[(String, String)](kp, topics, msgHandle)
+	 var kp = Map[String, String](
+			  "metadata.broker.list" -> brokers,
+			  "serializer.class" -> "kafka.serializer.StringEncoder",
+			  "group.id" -> "testGroupid",
+			  StreamingKafkaContext.WRONG_GROUP_FROM -> "last",//EARLIEST
+			  StreamingKafkaContext.CONSUMER_FROM -> "consum")
+    val sc = new SparkContext(new SparkConf().setMaster("local[2]").setAppName("Test"))
+    val ssc = new StreamingKafkaContext(kp,sc, Seconds(5))
+    val topics = Set("smartadsdeliverylog")
+    val ds = ssc
+    .createDirectStream[String,String,StringDecoder,StringDecoder,((String, Int, Long), String)](topics, msgHandle2)
     ds.foreachRDD { rdd =>
       println(rdd.count)
       //rdd.foreach(println)
       //do rdd operate....
       ssc.getRDDOffsets(rdd).foreach(println)
-      //ssc.updateRDDOffsets(kp,  "group.id.test", rdd)//如果想要实现 rdd.updateOffsets。这需要重写inputstream（之后会加上）
+      //ssc.updateRDDOffsets(kp,  "group.id.test", rdd)//如果想要实现 rdd.updateOffsets。这需要重新inputstream（之后会加上）
     }
     ssc.start()
     ssc.awaitTermination()
@@ -52,14 +53,20 @@
 # Example StreamingKafkaContextTest With Confguration
 > StreamingKafkaContextTest （配置文件，便于管理。适用于项目开发）
 ```
- val conf = new ConfigurationTest()
-    initConf("conf/config.properties", conf)
-    initJobConf(conf)
-    println(conf.getKV())
+    var kp = Map[String, String](
+      "metadata.broker.list" -> brokers,
+      "serializer.class" -> "kafka.serializer.StringEncoder",
+      "group.id" -> "group.id",
+      "kafka.last.consum" -> "last")
+    val conf = new KafkaConfig("conf/config.properties",kp)
+    val topics = Set("test")
+    conf.setTopics(topics)
     val scf = new SparkConf().setMaster("local[2]").setAppName("Test")
     val sc = new SparkContext(scf)
-    val ssc = new StreamingKafkaContext(sc, Seconds(5))
-    val ds = ssc.createDirectStream(conf, msgHandle)
+    val ssc = new StreamingKafkaContext(kp,sc, Seconds(5))
+    val ds = ssc.createDirectStream[
+      String,String,StringDecoder,StringDecoder,((String, Int, Long), String)](
+          conf, msgHandle2)
     ds.foreachRDD { rdd => rdd.foreach(println) }
     ssc.start()
     ssc.awaitTermination()
@@ -68,36 +75,40 @@
 # Example SparkKafkaContext 
 > SparkKafkaContext （适用于离线读取kafka数据）
 ```
-val skc = new SparkKafkaContext(
-      new SparkConf().setMaster("local").setAppName("SparkKafkaContextTest"))
-    val kp =Map[String, String](
-      "metadata.broker.list" -> brokers,
-      "serializer.class" -> "kafka.serializer.StringEncoder",
-      "group.id" -> "group.id",
-      "kafka.last.consum" -> "last")
+    val groupId = "test"
+    val kp = SparkKafkaContext.getKafkaParam(brokers,groupId,
+      "earliest", // last/consum/custom/earliest
+      "earliest" //wrong_from
+    )
     val topics = Set("test")
-    val kafkadataRdd = skc.kafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](kp, topics, msgHandle)
+    val skc = new SparkKafkaContext(kp,new SparkConf().setMaster("local")
+        										.set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10")
+        										.setAppName("SparkKafkaContextTest"))
+    val kafkadataRdd = skc.kafkaRDD[((String, Int, Long), String)](topics, msgHandle2) //根据配置开始读取
+    //RDD.rddToPairRDDFunctions(kafkadataRdd)
     kafkadataRdd.foreach(println)
-    kafkadataRdd.updateOffsets(kp)//更新kafka偏移量
-    
+    kafkadataRdd.getRDDOffsets().foreach(println)
+    kafkadataRdd.updateOffsets(kp)
 ```
 # Example KafkaWriter 
 > KafkaWriter （将rdd数据写入kafka）
 ```
  val sc = new SparkContext(new SparkConf().setMaster("local[2]").setAppName("Test"))
-    val ssc = new StreamingKafkaContext(sc, Seconds(5))
+    val topics = Set("test")
     var kp = Map[String, String](
       "metadata.broker.list" -> brokers,
       "serializer.class" -> "kafka.serializer.StringEncoder",
       "group.id" -> "test",
       "kafka.last.consum" -> "consum")
-    val topics = Set("test")
-    val ds = ssc.createDirectStream[(String, String)](kp, topics, msgHandle)
-    ds.foreachRDD { rdd => 
+    val ssc = new StreamingKafkaContext(kp,sc, Seconds(5))
+    
+    val ds = ssc.createDirectStream(topics)
+    ds.foreachRDD { rdd =>
       rdd.foreach(println)
       rdd.map(_._2)
-         .writeToKafka(producerConfig, transformFunc(outTopic,_))
-      }
+        .writeToKafka(producerConfig, transformFunc(outTopic, _))
+     
+    }
 
     ssc.start()
     ssc.awaitTermination()
