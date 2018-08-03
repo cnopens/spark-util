@@ -3,6 +3,8 @@ package org.apache.spark.kafka.writer
 import org.apache.spark.rdd.RDD
 import java.util.Properties
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.KafkaProducer
+
 class RDDKafkaWriter[T](@transient private val rdd: RDD[T]) {
  /**
   * @author LMQ
@@ -16,6 +18,7 @@ class RDDKafkaWriter[T](@transient private val rdd: RDD[T]) {
       partition
         .map(transformFunc)
         .foreach(record => producer.send(record))
+      producer.close()
     }
   }
    /**
@@ -31,6 +34,7 @@ class RDDKafkaWriter[T](@transient private val rdd: RDD[T]) {
       list
         .map(transformFunc)
         .foreach(record => producer.send(record))
+        producer.close()
         Iterator.apply(list.size)
       }
     .collect()

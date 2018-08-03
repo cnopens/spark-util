@@ -12,11 +12,18 @@ object KafkaProducerCache {
    * @param producerConfig properties for a [[KafkaProducer]]
    * @return a [[KafkaProducer]] already in the cache
    */
-  def getProducer[K, V](producerConfig: Properties): KafkaProducer[K, V] = {
+  def getProducerCache[K, V](producerConfig: Properties): KafkaProducer[K, V] = {
     producers.getOrElse(producerConfig, {
       val producer = new KafkaProducer[K, V](producerConfig)
       producers(producerConfig) = producer
       producer
     }).asInstanceOf[KafkaProducer[K, V]]
+  }
+ /**
+  * @author LMQ
+  * @func 在低版本的kafka，如果不close ，会导致数据少发的情况
+  */
+   def getProducer[K, V](producerConfig: Properties): KafkaProducer[K, V] = {
+      new KafkaProducer[K, V](producerConfig)
   }
 }
