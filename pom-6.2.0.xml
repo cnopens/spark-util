@@ -1,20 +1,20 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>es-shade</groupId>
-  <artifactId>es-shade</artifactId>
-  <version>6.2.0</version>
-<properties>
-        <elasticsearch.version>2.0.1</elasticsearch.version>
-    </properties>
-    <dependencies>
-   <!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>es.shade</groupId>
+	<artifactId>es-shade</artifactId>
+	<version>6.2.0</version>
+	<properties>
+	</properties>
+	<dependencies>
 <dependency>
-    <groupId>org.elasticsearch</groupId>
-    <artifactId>elasticsearch</artifactId>
+    <groupId>org.elasticsearch.client</groupId>
+    <artifactId>transport</artifactId>
     <version>6.2.0</version>
 </dependency>
-    </dependencies>
-<build>
+
+	</dependencies>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -47,9 +47,6 @@
 									</excludes>
 								</filter>
 							</filters>
-							<transformers>
-               <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer" />
-             </transformers>
 						</configuration>
 					</execution>
 				</executions>
@@ -71,3 +68,4 @@
 	</build>
 
 </project>
+
