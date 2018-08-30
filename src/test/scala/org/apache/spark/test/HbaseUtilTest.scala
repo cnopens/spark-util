@@ -5,27 +5,24 @@ import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.spark.rdd.RDD
+import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 
 object HbaseUtilTest {
   val tablename = "test"
-  val zk="solr1,solr2,datanode37"
+  val zk = "zk1,zk2,zk3"
+  def f(r: (ImmutableBytesWritable, Result)) = {
+    val re = r._2
+    new String(re.getRow)
+  }
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setMaster("local").setAppName("tets")
     val sc = new SparkContext(conf)
-
-    val hc = new SparkHBaseContext(sc, sc.hadoopConfiguration)
-    //val rdd = sc.parallelize(Array("1"))
-      testBulkRDD(hc)
-      .foreach { println}
+    val hc = new SparkHBaseContext(sc, zk)
+    hc.bulkAllRDD(tablename, f).foreach { println }
+    hc.bulkScanRDD(tablename, new Scan(), f)
   }
-  def testBulkRDD(hc: SparkHBaseContext)= {
-      hc.bulkAllRDD(zk,tablename, f)
+  def testBulkGet(hc: SparkHBaseContext, rdd: RDD[String]) = {
+    hc.bulkGetRDD(tablename, rdd, makeGet, convertResult)
   }
-  def testBulkGet(hc: SparkHBaseContext, rdd: RDD[String]) {
-    val r1 = hc.bulkGetRDD(zk,tablename, rdd, makeGet, convertResult)
-  }
-  def testBulkScan(hc: SparkHBaseContext) {
-    val r2 = hc.bulkScanRDD(zk,tablename, new Scan(), f)
-  }
-
 }

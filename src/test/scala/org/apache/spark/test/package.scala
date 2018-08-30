@@ -10,8 +10,5 @@ package object test{
   def convertResult(result: Result) = {
     ""
   }
-  def f(r: (ImmutableBytesWritable, Result)) = {
-    val re=r._2
-    new String(re.getRow)
-  }
+
 }

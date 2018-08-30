@@ -15,4 +15,10 @@
 * spark RDD[T] update with hbase data then put return to hbase <br>
   RDD[T] -> Get -> Combine -> Put -> Hbase
 ## Example
-
+```
+    val conf = new SparkConf().setMaster("local").setAppName("tets")
+    val sc = new SparkContext(conf)
+    val hc = new SparkHBaseContext(sc, zk)
+    hc.bulkAllRDD(tablename, f).foreach { println }
+    hc.bulkScanRDD(tablename, new Scan(), f)
+```
