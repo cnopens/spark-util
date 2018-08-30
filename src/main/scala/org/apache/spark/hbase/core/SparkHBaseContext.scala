@@ -24,7 +24,7 @@ class SparkHBaseContext(
    * @time 2018-08-20
    * @func 根据scan扫描出hbase数据
    */
-  def bulkScanRDD[T: ClassTag](
+  def scanHbaseRDD[T: ClassTag](
     tableName: String,
     scan: Scan,
     f: ((ImmutableBytesWritable, Result)) => T): RDD[T] = {
@@ -53,7 +53,7 @@ class SparkHBaseContext(
    * @time 2018-04-08
    * @func 读取hbase的所有数据
    */
-  def bulkAllRDD[T: ClassTag](
+  def hbaseRDD[T: ClassTag](
     tableName: String,
     f: ((ImmutableBytesWritable, Result)) => T): RDD[T] = {
     val job = getHbaseBulkJob(tableName)
@@ -67,7 +67,7 @@ class SparkHBaseContext(
    * @time 2018-04-08
    * @func 读取hbase的所有数据
    */
-  def bulkAllRDD[T: ClassTag](
+  def hbaseRDD[T: ClassTag](
     tableName: String,
     conf: Configuration,
     f: ((ImmutableBytesWritable, Result)) => T): RDD[T] = {
@@ -82,7 +82,7 @@ class SparkHBaseContext(
    * @time 2018-04-08
    * @func 批量gethbase的数据
    */
-  def bulkGetRDD[T, U](
+  def batchGetRDD[T, U](
     tableName: String,
     batchSize: Int, //get batch
     rdd: RDD[T],
@@ -101,11 +101,11 @@ class SparkHBaseContext(
    * @time 2018-04-08
    * @func 批量gethbase的数据
    */
-  def bulkGetRDD[T, U](
+  def batchGetRDD[T, U](
     tableName: String,
     rdd: RDD[T],
     makeGet: (T) => Get,
     convertResult: (Result) => U): RDD[U] = {
-    bulkGetRDD(tableName, 1000, rdd, makeGet, convertResult)
+    batchGetRDD(tableName, 1000, rdd, makeGet, convertResult)
   }
 }

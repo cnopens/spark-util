@@ -19,10 +19,13 @@ object HbaseUtilTest {
     val conf = new SparkConf().setMaster("local").setAppName("tets")
     val sc = new SparkContext(conf)
     val hc = new SparkHBaseContext(sc, zk)
-    hc.bulkAllRDD(tablename, f).foreach { println }
-    hc.bulkScanRDD(tablename, new Scan(), f)
+    hc.hbaseRDD(tablename, f).foreach { println }
+    hc.scanHbaseRDD(tablename, new Scan(), f)
   }
-  def testBulkGet(hc: SparkHBaseContext, rdd: RDD[String]) = {
-    hc.bulkGetRDD(tablename, rdd, makeGet, convertResult)
+  /**
+   * @func 根据rowkey，批量获取rdd
+   */
+  def testBatchGetRDD(hc: SparkHBaseContext, rdd: RDD[String]) = {
+    hc.batchGetRDD(tablename, rdd, makeGet, convertResult)
   }
 }

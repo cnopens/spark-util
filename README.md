@@ -19,6 +19,6 @@
     val conf = new SparkConf().setMaster("local").setAppName("tets")
     val sc = new SparkContext(conf)
     val hc = new SparkHBaseContext(sc, zk)
-    hc.bulkAllRDD(tablename, f).foreach { println }
-    hc.bulkScanRDD(tablename, new Scan(), f)
+    hc.hbaseRDD(tablename, f).foreach { println }
+    hc.scanHbaseRDD(tablename, new Scan(), f)
 ```
