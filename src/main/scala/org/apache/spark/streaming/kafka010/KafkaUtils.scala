@@ -153,7 +153,7 @@ object KafkaUtils extends Logging {
   /**
    * Tweak kafka params to prevent issues on executors
    */
-  private[kafka010] def fixKafkaParams(kafkaParams: ju.HashMap[String, Object]): Unit = {
+  def fixKafkaParams(kafkaParams: ju.HashMap[String, Object]): Unit = {
     logWarning(s"overriding ${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG} to false for executor")
     kafkaParams.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
 
