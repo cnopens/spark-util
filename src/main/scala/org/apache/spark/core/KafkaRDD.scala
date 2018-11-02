@@ -51,7 +51,7 @@ private[spark] class KafkaRDD[K, V](
     val preferredHosts: ju.Map[TopicPartition, String],
     useConsumerCache: Boolean
 ) extends RDD[ConsumerRecord[K, V]](sc, Nil) with Logging with HasOffsetRanges {
-
+  kafkaParams.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "none")
   assert("none" ==
     kafkaParams.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).asInstanceOf[String],
     ConsumerConfig.AUTO_OFFSET_RESET_CONFIG +
