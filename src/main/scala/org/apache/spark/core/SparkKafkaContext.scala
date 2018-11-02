@@ -124,4 +124,12 @@ class SparkKafkaContext[K, V] {
     .map { x => (x.topicPartition(),x.untilOffset) }.toMap
     kc.updateOffset(untilOffset)
   }
+  
+ def updateOffset(offsetRanges: Array[OffsetRange]){
+    val untilOffset=
+    offsetRanges
+    .map { x => (x.topicPartition(),x.untilOffset) }.toMap
+    kc.updateOffset(untilOffset)
+  }
+  
 }

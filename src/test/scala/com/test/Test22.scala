@@ -15,7 +15,7 @@ object Test22 extends SparkKafkaConfsKey {
   def main(args: Array[String]): Unit = {
     println(">>>>>>>>>>2")
     val brokers = "kafka-1:9092,kafka-3:9092,kafka-3:9092"
-    val groupId = "test2233"
+    val groupId = "test"
     val topic = "smartadsclicklog"
     val topics = Set("smartadsclicklog")
     val props = new Properties();
@@ -27,14 +27,18 @@ object Test22 extends SparkKafkaConfsKey {
     props.put("key.deserializer.encoding", "UTF8");
     props.put("value.deserializer.encoding", "UTF8");
 
-    val kc = new KafkaCluster(props.toMap)
-    kc.getConsumerOffet(topics).foreach(println)
-    kc.getLastestOffset(topics).foreach(println)
-
     val sc = new SparkContext(new SparkConf().setAppName("test").setMaster("local"))
     val skc = new SparkKafkaContext(props.toMap, sc)
-    val rdd = skc.createKafkaRDD[String, String](topics,1)
-    rdd.foreach(x => println(x.value()))
+    //val kc = new KafkaCluster(props.toMap)
+    skc.kc.getConsumerOffet(topics).foreach(println)
+    println(">>")
+    val ast= skc.kc.getLastestOffset(topics)
+    ast.foreach(println)
+    println(">>")
+    val rdd = skc.createKafkaRDD[String, String](topics,2)
+    skc.updateOffset(rdd)
+    //rdd.foreach(x => println(x.value()))
 
+    
   }
 }
