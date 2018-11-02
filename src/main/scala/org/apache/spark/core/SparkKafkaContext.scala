@@ -29,6 +29,7 @@ import scala.collection.JavaConversions._
 import java.{ util => ju }
 import org.apache.spark.streaming.kafka010.KafkaRDD
 import org.apache.spark.kafka.util.KafkaCluster
+import org.apache.spark.streaming.kafka010.HasOffsetRanges
 
 /**
  * @author LMQ
@@ -110,9 +111,17 @@ class SparkKafkaContext[K, V] {
   def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String], perParLimit: Long) = {
     new KafkaRDD[K, V](
       sparkcontext,
-       kc.fixKafkaExcutorParams(),
+      kc.fixKafkaExcutorParams(),
       kc.getOffsetRange(topics, perParLimit),
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
+  }
+  
+  def updateOffset[T](rdd:RDD[T]){
+    val untilOffset=rdd
+    .asInstanceOf[HasOffsetRanges]
+    .offsetRanges
+    .map { x => (x.topicPartition(),x.untilOffset) }.toMap
+    kc.updateOffset(untilOffset)
   }
 }

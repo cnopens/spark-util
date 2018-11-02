@@ -96,9 +96,11 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
     c.subscribe(topics)
     c.poll(0)
     val parts = c.assignment()
+    val currentOffset = parts.map { tp => tp -> c.position(tp) }.toMap
     c.pause(parts)
     c.seekToEnd(parts)
     val re = parts.map { ps => ps -> c.position(ps) }
+    currentOffset.foreach { case (tp, l) => c.seek(tp, l) }
     re.toMap
   }
   /**
