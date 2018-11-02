@@ -102,16 +102,16 @@ class SparkKafkaContext[K, V] {
   def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String]) = {
     new KafkaRDD[K, V](
       sparkcontext,
-      kc.fixKp,
+      kc.fixKafkaExcutorParams(),
       kc.getOffsetRange(topics),
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
   }
-   def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String],perParLimit:Long) = {
+  def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String], perParLimit: Long) = {
     new KafkaRDD[K, V](
       sparkcontext,
-      kc.fixKp,
-      kc.getOffsetRange(topics,perParLimit),
+       kc.fixKafkaExcutorParams(),
+      kc.getOffsetRange(topics, perParLimit),
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
   }

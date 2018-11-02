@@ -12,6 +12,7 @@ import org.apache.spark.streaming.kafka010.OffsetRange
 class KafkaCluster[K, V](kp: Map[String, String]) {
 
   lazy val fixKp = fixKafkaParams(kp)
+  var excutorFixKp: java.util.HashMap[String, Object] = null
   @transient private var kc: Consumer[K, V] = null
 
   /**
@@ -50,6 +51,22 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
     fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
     fixKp
   }
+
+  /**
+   * @author LMQ
+   * @time 2018-10-31
+   * @desc 修正kp的配置。当使用spark读取kafka数据的时候，ssl配置文件的路径不能写全路径（除非每台node下都有这个路径）。建议使用--files 来上传ssl配置。这里提供了修正一开始的kp
+   */
+  def fixKafkaExcutorParams() = {
+    if (excutorFixKp == null) {
+      excutorFixKp = new java.util.HashMap[String, Object]()
+      fixKp.foreach { case (x, y) => excutorFixKp.put(x, y) }
+      excutorFixKp.put("ssl.truststore.location", "client.truststore.jks")
+      excutorFixKp.put("ssl.keystore.location", "client.keystore.jks")
+    }
+    excutorFixKp
+  }
+
   /**
    * @author LMQ
    * @time 2018-10-31
@@ -68,9 +85,7 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
    */
   def updateOffset(offset: Map[TopicPartition, Long]) {
     offset.foreach { case (tp, l) => c.seek(tp, l) }
-    c.commitSync(offset
-      .map { case (tp, l) => tp -> new OffsetAndMetadata(l) }
-      .asJava)
+    c.commitAsync()
   }
   /**
    * @author LMQ
@@ -91,15 +106,16 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
    * @time 2018-11-02
    * @desc 读取数据的范围，默认为 ： 上次消费到最新数据
    */
-  def getOffsetRange(topics: Set[String],perPartMaxNum:Long=10000) = {
+  def getOffsetRange(topics: Set[String], perPartMaxNum: Long = 10000) = {
     val consumerOffset = getConsumerOffet(topics)
     val lastOffset = getLastestOffset(topics)
-    lastOffset.map {case (tp, l) =>
+    lastOffset.map {
+      case (tp, l) =>
         if (consumerOffset.contains(tp)) {
-          val untilOff=if(perPartMaxNum>0) Math.min(consumerOffset(tp)+perPartMaxNum,l) else l
+          val untilOff = if (perPartMaxNum > 0) Math.min(consumerOffset(tp) + perPartMaxNum, l) else l
           OffsetRange.create(tp.topic, tp.partition, consumerOffset(tp), untilOff)
         } else {
-          val untilOff=if(perPartMaxNum>0) Math.min(perPartMaxNum,l) else l
+          val untilOff = if (perPartMaxNum > 0) Math.min(perPartMaxNum, l) else l
           OffsetRange.create(tp.topic, tp.partition, 0, untilOff)
         }
     }.toArray
