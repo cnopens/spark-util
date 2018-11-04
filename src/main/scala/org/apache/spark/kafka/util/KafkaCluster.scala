@@ -115,16 +115,16 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
     lastOffset.map {
       case (tp, l) =>
         if (consumerOffset.contains(tp)) {
-          val untilOff =  if(earlestOffset.contains(tp)){
+          val (startOffset,untilOff) =  if(earlestOffset.contains(tp)){
             if(consumerOffset(tp)<earlestOffset(tp)){//过期
-              if (perPartMaxNum > 0) Math.min(earlestOffset(tp), l) else l
+              if (perPartMaxNum > 0) (earlestOffset(tp),Math.min(earlestOffset(tp)+perPartMaxNum, l)) else (earlestOffset(tp),l)
             }else{
-              if (perPartMaxNum > 0) Math.min(consumerOffset(tp), l) else l
+              if (perPartMaxNum > 0) (consumerOffset(tp),Math.min(consumerOffset(tp)+perPartMaxNum, l)) else (consumerOffset(tp),l)
             }
           }else{
-            if (perPartMaxNum > 0) Math.min(consumerOffset(tp), l) else l
+            if (perPartMaxNum > 0) (consumerOffset(tp),Math.min(consumerOffset(tp)+perPartMaxNum, l)) else (consumerOffset(tp),l)
           }
-          OffsetRange.create(tp.topic, tp.partition, consumerOffset(tp), untilOff)
+          OffsetRange.create(tp.topic, tp.partition, startOffset, untilOff)
         } else {
           val untilOff = if (perPartMaxNum > 0) Math.min(perPartMaxNum, l) else l
           OffsetRange.create(tp.topic, tp.partition, 0, untilOff)
