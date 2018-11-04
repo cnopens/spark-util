@@ -111,10 +111,19 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
   def getOffsetRange(topics: Set[String], perPartMaxNum: Long = 10000) = {
     val consumerOffset = getConsumerOffet(topics)
     val lastOffset = getLastestOffset(topics)
+    val earlestOffset = getEarleastOffset(topics)
     lastOffset.map {
       case (tp, l) =>
         if (consumerOffset.contains(tp)) {
-          val untilOff = if (perPartMaxNum > 0) Math.min(consumerOffset(tp) + perPartMaxNum, l) else l
+          val untilOff =  if(earlestOffset.contains(tp)){
+            if(consumerOffset(tp)<earlestOffset(tp)){//过期
+              if (perPartMaxNum > 0) Math.min(earlestOffset(tp), l) else l
+            }else{
+              if (perPartMaxNum > 0) Math.min(consumerOffset(tp), l) else l
+            }
+          }else{
+            if (perPartMaxNum > 0) Math.min(consumerOffset(tp), l) else l
+          }
           OffsetRange.create(tp.topic, tp.partition, consumerOffset(tp), untilOff)
         } else {
           val untilOff = if (perPartMaxNum > 0) Math.min(perPartMaxNum, l) else l
@@ -131,11 +140,11 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
     c.subscribe(topics)
     c.poll(0)
     val parts = c.assignment()
-    //val currentOffset = parts.map { tp => tp -> c.position(tp) }.toMap
+    val currentOffset = parts.map { tp => tp -> c.position(tp) }.toMap
     c.pause(parts)
     c.seekToBeginning(parts)
     val re = parts.map { ps => ps -> c.position(ps) }
-    //currentOffset.foreach { case (tp, l) => c.seek(tp, l) }
-    re
+    currentOffset.foreach { case (tp, l) => c.seek(tp, l) }
+    re.toMap
   }
 }
