@@ -37,19 +37,7 @@ import org.apache.spark.streaming.kafka010.HasOffsetRanges
  * @description 此类主要是用于 创建 kafkaRDD 。
  * @description 创建的kafkaRDD提供更新偏移量的能力
  */
-class SparkKafkaContext[K, V] {
-  val GROUPID = "group.id"
-  val BROKER = "metadata.broker.list"
-  val BOOTSTRAP = "bootstrap.servers"
-  val SERIALIZER = "serializer.class"
-  val VALUE_DESERIALIZER = "value.deserializer"
-  val KEY_DESERIALIZER = "key.deserializer"
-  val AUTO_COMMIT = "enable.auto.commit"
-  val KEY_DESERIALIZER_ENCODE = "key.deserializer.encoding"
-  val VALUE_DESERIALIZER_ENCODE = "value.deserializer.encoding"
-  val AUTO_OFFSET_RESET_CONFIG = "auto.offset.reset"
-  val ENABLE_AUTO_COMMIT_CONFIG = "enable.auto.commit"
-  val RECEIVE_BUFFER_CONFIG = "receive.buffer.bytes"
+class SparkKafkaContext[K, V] extends {
   var sparkcontext: SparkContext = null
   var kc: KafkaCluster[K, V] = null
   lazy val conf = sparkcontext.getConf
@@ -91,6 +79,7 @@ class SparkKafkaContext[K, V] {
   /**
    * @author LMQ
    * @time 2018.11.01
+   * @desc 自定义读取数据区间
    */
   def createKafkaRDD[K: ClassTag, V: ClassTag](offsetRanges: Array[OffsetRange]) = {
     new KafkaRDD[K, V](
@@ -100,15 +89,12 @@ class SparkKafkaContext[K, V] {
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
   }
-  def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String]) = {
-    new KafkaRDD[K, V](
-      sparkcontext,
-      kc.fixKafkaExcutorParams(),
-      kc.getOffsetRange(topics),
-      ju.Collections.emptyMap[TopicPartition, String](),
-      true)
-  }
-  def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String], perParLimit: Long) = {
+  /**
+   * @author LMQ
+   * @time 2018-11-05
+   * @desc 更获取kafkardd，限制读取条数（默认限制10000，如果想要不限制可以设置成0）
+   */
+  def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String], perParLimit: Long = 10000) = {
     new KafkaRDD[K, V](
       sparkcontext,
       kc.fixKafkaExcutorParams(),
@@ -116,20 +102,28 @@ class SparkKafkaContext[K, V] {
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
   }
-  
-  def updateOffset[T](rdd:RDD[T]){
-    val untilOffset=rdd
-    .asInstanceOf[HasOffsetRanges]
-    .offsetRanges
-    .map { x => (x.topicPartition(),x.untilOffset) }.toMap
+  /**
+   * @author LMQ
+   * @time 2018-11-05
+   * @desc 更新offset
+   */
+  def updateOffset[T](rdd: RDD[T]) {
+    val untilOffset = rdd
+      .asInstanceOf[HasOffsetRanges]
+      .offsetRanges
+      .map { x => (x.topicPartition(), x.untilOffset) }.toMap
     kc.updateOffset(untilOffset)
   }
-  
- def updateOffset(offsetRanges: Array[OffsetRange]){
-    val untilOffset=
-    offsetRanges
-    .map { x => (x.topicPartition(),x.untilOffset) }.toMap
+  /**
+   * @author LMQ
+   * @time 2018-11-05
+   * @desc 更新offset
+   */
+  def updateOffset(offsetRanges: Array[OffsetRange]) {
+    val untilOffset =
+      offsetRanges
+        .map { x => (x.topicPartition(), x.untilOffset) }.toMap
     kc.updateOffset(untilOffset)
   }
-  
+
 }

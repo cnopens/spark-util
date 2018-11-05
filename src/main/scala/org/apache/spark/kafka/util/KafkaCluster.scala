@@ -116,7 +116,7 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
       case (tp, l) =>
         if (consumerOffset.contains(tp)) {
           val (startOffset,untilOff) =  if(earlestOffset.contains(tp)){
-            if(consumerOffset(tp)<earlestOffset(tp)){//过期
+            if(consumerOffset(tp)<earlestOffset(tp)){//过期.过期默认从最早的数据开始
               if (perPartMaxNum > 0) (earlestOffset(tp),Math.min(earlestOffset(tp)+perPartMaxNum, l)) else (earlestOffset(tp),l)
             }else{
               if (perPartMaxNum > 0) (consumerOffset(tp),Math.min(consumerOffset(tp)+perPartMaxNum, l)) else (consumerOffset(tp),l)
