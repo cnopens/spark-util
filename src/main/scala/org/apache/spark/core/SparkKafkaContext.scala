@@ -37,7 +37,7 @@ import org.apache.spark.streaming.kafka010.HasOffsetRanges
  * @description 此类主要是用于 创建 kafkaRDD 。
  * @description 创建的kafkaRDD提供更新偏移量的能力
  */
-class SparkKafkaContext[K, V] extends {
+class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
   var sparkcontext: SparkContext = null
   var kc: KafkaCluster[K, V] = null
   lazy val conf = sparkcontext.getConf
@@ -81,10 +81,10 @@ class SparkKafkaContext[K, V] extends {
    * @time 2018.11.01
    * @desc 自定义读取数据区间
    */
-  def createKafkaRDD[K: ClassTag, V: ClassTag](offsetRanges: Array[OffsetRange]) = {
+  def createKafkaRDD(offsetRanges: Array[OffsetRange]) = {
     new KafkaRDD[K, V](
       sparkcontext,
-      kc.fixKp,
+      kc.fixKafkaExcutorParams(),
       offsetRanges,
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
@@ -94,11 +94,12 @@ class SparkKafkaContext[K, V] extends {
    * @time 2018-11-05
    * @desc 更获取kafkardd，限制读取条数（默认限制10000，如果想要不限制可以设置成0）
    */
-  def createKafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String], perParLimit: Long = 10000) = {
+  def createKafkaRDD(topics: Set[String], perParLimit: Long = 10000) = {
+    val offrange=kc.getOffsetRange(topics, perParLimit)
     new KafkaRDD[K, V](
       sparkcontext,
       kc.fixKafkaExcutorParams(),
-      kc.getOffsetRange(topics, perParLimit),
+      offrange,
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
   }
@@ -123,7 +124,15 @@ class SparkKafkaContext[K, V] extends {
     val untilOffset =
       offsetRanges
         .map { x => (x.topicPartition(), x.untilOffset) }.toMap
+       
     kc.updateOffset(untilOffset)
   }
-
+  /**
+   * @author LMQ
+   * @time 2018-11-05
+   * @desc 更新offset
+   */
+  def updateOffset(last: Map[TopicPartition, Long]) {
+    kc.updateOffset(last)
+  }
 }

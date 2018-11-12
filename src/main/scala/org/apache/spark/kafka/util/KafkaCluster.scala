@@ -9,6 +9,8 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.spark.streaming.kafka010.KafkaUtils
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.spark.streaming.kafka010.OffsetRange
+import java.util.concurrent.atomic.AtomicReference
+import org.apache.kafka.clients.consumer.OffsetCommitCallback
 class KafkaCluster[K, V](kp: Map[String, String]) {
 
   lazy val fixKp = fixKafkaParams(kp)
@@ -85,6 +87,8 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
    */
   def updateOffset(offset: Map[TopicPartition, Long]) {
     offset.foreach { case (tp, l) => c.seek(tp, l) }
+    c.poll(0) //激活consumer，防止超时提交失败
+    c.pause(c.assignment())
     c.commitAsync()
   }
   /**
@@ -115,14 +119,14 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
     lastOffset.map {
       case (tp, l) =>
         if (consumerOffset.contains(tp)) {
-          val (startOffset,untilOff) =  if(earlestOffset.contains(tp)){
-            if(consumerOffset(tp)<earlestOffset(tp)){//过期.过期默认从最早的数据开始
-              if (perPartMaxNum > 0) (earlestOffset(tp),Math.min(earlestOffset(tp)+perPartMaxNum, l)) else (earlestOffset(tp),l)
-            }else{
-              if (perPartMaxNum > 0) (consumerOffset(tp),Math.min(consumerOffset(tp)+perPartMaxNum, l)) else (consumerOffset(tp),l)
+          val (startOffset, untilOff) = if (earlestOffset.contains(tp)) {
+            if (consumerOffset(tp) < earlestOffset(tp)) { //过期.过期默认从最早的数据开始
+              if (perPartMaxNum > 0) (earlestOffset(tp), Math.min(earlestOffset(tp) + perPartMaxNum, l)) else (earlestOffset(tp), l)
+            } else {
+              if (perPartMaxNum > 0) (consumerOffset(tp), Math.min(consumerOffset(tp) + perPartMaxNum, l)) else (consumerOffset(tp), l)
             }
-          }else{
-            if (perPartMaxNum > 0) (consumerOffset(tp),Math.min(consumerOffset(tp)+perPartMaxNum, l)) else (consumerOffset(tp),l)
+          } else {
+            if (perPartMaxNum > 0) (consumerOffset(tp), Math.min(consumerOffset(tp) + perPartMaxNum, l)) else (consumerOffset(tp), l)
           }
           OffsetRange.create(tp.topic, tp.partition, startOffset, untilOff)
         } else {
