@@ -23,7 +23,6 @@ import org.apache.kafka.common.{ KafkaException, TopicPartition }
 import org.apache.spark.SparkConf
 import org.apache.spark.Logging
 
-
 /**
  * Consumer of single topicpartition, intended for cached reuse.
  * Underlying consumer is not threadsafe, so neither is this,

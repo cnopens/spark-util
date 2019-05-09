@@ -11,10 +11,18 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.spark.streaming.kafka010.OffsetRange
 import java.util.concurrent.atomic.AtomicReference
 import org.apache.kafka.clients.consumer.OffsetCommitCallback
-class KafkaCluster[K, V](kp: Map[String, String]) {
+import org.apache.spark.core.SparkKafkaConfsKey
+import org.apache.spark.core.SparkKafkaContext
+
+/**
+ * @author LMQ
+ * @time 20190508
+ * @desc 用于操作kafka的util。
+ */
+class KafkaCluster[K, V](kp: Map[String, String]){
 
   lazy val fixKp = fixKafkaParams(kp)
-  var excutorFixKp: java.util.HashMap[String, Object] = null
+  var excutorFixKp: java.util.HashMap[String, Object] = null //用于excutor的配置
   @transient private var kc: Consumer[K, V] = null
 
   /**
@@ -47,8 +55,15 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
   def fixKafkaParams(kafkaParams: Map[String, String]) = {
     val fixKp = new java.util.HashMap[String, Object]()
     kafkaParams.foreach { case (x, y) => fixKp.put(x, y) }
+    if (fixKp.containsKey(SparkKafkaContext.DRIVER_SSL_TRUSTSTORE_LOCATION)) {
+      fixKp.put(SparkKafkaContext.SSL_TRUSTSTORE_LOCATION, fixKp(SparkKafkaContext.DRIVER_SSL_TRUSTSTORE_LOCATION).toString())
+    }
+    if (fixKp.containsKey(SparkKafkaContext.DRIVER_SSL_KEYSTORE_LOCATION)) {
+      fixKp.put(SparkKafkaContext.SSL_KEYSTORE_LOCATION, fixKp(SparkKafkaContext.DRIVER_SSL_KEYSTORE_LOCATION).toString())
+    }
     fixKp.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
-    if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) || fixKp.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
+    if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG)
+      || fixKp.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
       fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
     fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
     fixKp
@@ -63,8 +78,12 @@ class KafkaCluster[K, V](kp: Map[String, String]) {
     if (excutorFixKp == null) {
       excutorFixKp = new java.util.HashMap[String, Object]()
       fixKp.foreach { case (x, y) => excutorFixKp.put(x, y) }
-      excutorFixKp.put("ssl.truststore.location", "client.truststore.jks")
-      excutorFixKp.put("ssl.keystore.location", "client.keystore.jks")
+      if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION)) {
+        excutorFixKp.put(SparkKafkaContext.SSL_TRUSTSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION))
+      }
+      if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION)) {
+        excutorFixKp.put(SparkKafkaContext.SSL_KEYSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION))
+      }
     }
     excutorFixKp
   }

@@ -30,6 +30,7 @@ import java.{ util => ju }
 import org.apache.spark.streaming.kafka010.KafkaRDD
 import org.apache.spark.kafka.util.KafkaCluster
 import org.apache.spark.streaming.kafka010.HasOffsetRanges
+import scala.beans.BeanProperty
 
 /**
  * @author LMQ
@@ -37,7 +38,7 @@ import org.apache.spark.streaming.kafka010.HasOffsetRanges
  * @description 此类主要是用于 创建 kafkaRDD 。
  * @description 创建的kafkaRDD提供更新偏移量的能力
  */
-class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
+class SparkKafkaContext[K: ClassTag, V: ClassTag] extends SparkKafkaConfsKey{
   var sparkcontext: SparkContext = null
   var kc: KafkaCluster[K, V] = null
   lazy val conf = sparkcontext.getConf
@@ -46,18 +47,21 @@ class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
       kc = new KafkaCluster(kp)
     }
   }
-
-  def this(kp: Map[String, String], sparkcontext: SparkContext) {
+  def this(kp: Map[String, String],
+           sparkcontext: SparkContext) {
     this()
     initKafkaCluster(kp)
     this.sparkcontext = sparkcontext
   }
-  def this(kp: Map[String, String], conf: SparkConf) {
+  def this(kp: Map[String, String],
+           conf: SparkConf) {
     this()
     initKafkaCluster(kp)
     sparkcontext = new SparkContext(conf)
   }
-  def this(kp: Map[String, String], master: String, appName: String) {
+  def this(kp: Map[String, String],
+           master: String,
+           appName: String) {
     this()
     val conf = new SparkConf()
     initKafkaCluster(kp)
@@ -65,7 +69,8 @@ class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
     conf.setAppName(appName)
     sparkcontext = new SparkContext(conf)
   }
-  def this(kp: Map[String, String], appName: String) {
+  def this(kp: Map[String, String],
+           appName: String) {
     this()
     initKafkaCluster(kp)
     val conf = new SparkConf()
@@ -84,7 +89,7 @@ class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
   def createKafkaRDD(offsetRanges: Array[OffsetRange]) = {
     new KafkaRDD[K, V](
       sparkcontext,
-      kc.fixKafkaExcutorParams(),
+      kc.fixKafkaExcutorParams,
       offsetRanges,
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
@@ -94,12 +99,12 @@ class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
    * @time 2018-11-05
    * @desc 更获取kafkardd，限制读取条数（默认限制10000，如果想要不限制可以设置成0）
    */
-  def createKafkaRDD(topics: Set[String], perParLimit: Long = 10000) = {
-    val offrange=kc.getOffsetRange(topics, perParLimit)
+  def createKafkaRDD(topics: Set[String],
+                     perParLimit: Long = 10000) = {
     new KafkaRDD[K, V](
       sparkcontext,
-      kc.fixKafkaExcutorParams(),
-      offrange,
+      kc.fixKafkaExcutorParams,
+      kc.getOffsetRange(topics, perParLimit),
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
   }
@@ -124,7 +129,7 @@ class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
     val untilOffset =
       offsetRanges
         .map { x => (x.topicPartition(), x.untilOffset) }.toMap
-       
+
     kc.updateOffset(untilOffset)
   }
   /**
@@ -135,4 +140,7 @@ class SparkKafkaContext[K:ClassTag, V:ClassTag] extends {
   def updateOffset(last: Map[TopicPartition, Long]) {
     kc.updateOffset(last)
   }
+}
+object SparkKafkaContext  extends SparkKafkaConfsKey {
+  
 }
