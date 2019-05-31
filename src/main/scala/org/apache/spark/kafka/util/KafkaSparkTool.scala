@@ -6,6 +6,7 @@ import org.apache.spark.streaming.kafka.KafkaCluster.LeaderOffset
 import org.slf4j.LoggerFactory
 import org.apache.spark.core.SparkKafkaConfsKey
 import org.apache.spark.streaming.kafka.KafkaCluster
+import org.apache.log4j.PropertyConfigurator
 
 /**
  * @author LMQ
