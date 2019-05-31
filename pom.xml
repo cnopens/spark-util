@@ -29,11 +29,13 @@
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-core_2.10</artifactId>
 			<version>${spark-version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-streaming_2.10</artifactId>
 			<version>${spark-version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<!-- 如果集群环境是10的话，发送代码用10的client来发送 -->
 		<dependency>
@@ -79,7 +81,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
+		<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 
@@ -94,14 +96,6 @@
 							<outputDirectory>
 								${project.build.directory}/lib
 							</outputDirectory>
-							<excludeArtifactIds>
-								spark-core_2.10,
-								spark-streaming_2.10,
-								hbase-client
-							</excludeArtifactIds>
-							<!-- <excludeArtifactIds> spark-core_2.10, json, hbase-client, spark-streaming_2.10 
-								</excludeArtifactIds> <excludeGroupIds> org.apache.hadoop </excludeGroupIds> -->
-
 						</configuration>
 					</execution>
 				</executions>

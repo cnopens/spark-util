@@ -25,36 +25,25 @@ object Test extends SparkKafkaConfsKey {
     props.put("key.deserializer.encoding", "UTF8");
     props.put("value.deserializer.encoding", "UTF8");
     props.put("heartbeat.interval.ms", "6000");
-    
-    
-    
+
     //如果需要使用ssl验证，需要设置一下四个参数
-//    props.put(SparkKafkaContext.DRIVER_SSL_TRUSTSTORE_LOCATION, "/mnt/kafka-key/client.truststore.jks")
-//    props.put(SparkKafkaContext.DRIVER_SSL_KEYSTORE_LOCATION, "/mnt/kafka-key/client.keystore.jks")
-//    props.put(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION, "client.truststore.jks")
-//    props.put(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION, "client.keystore.jks")
-    
+    props.put(SparkKafkaContext.DRIVER_SSL_TRUSTSTORE_LOCATION, "/mnt/kafka-key/client.truststore.jks")
+    props.put(SparkKafkaContext.DRIVER_SSL_KEYSTORE_LOCATION, "/mnt/kafka-key/client.keystore.jks")
+    props.put(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION, "client.truststore.jks")
+    props.put(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION, "client.keystore.jks")
 
     val sc = new SparkContext(new SparkConf().setAppName("test").setMaster("local"))
-    
     val skc = new SparkKafkaContext[String, String](props.toMap, sc)
-    SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION
-    skc.kc.fixKp.foreach(println)
     skc.kc.getLastestOffset(topics).foreach(println)
-    
-//    
-//    while (true) {
-//      //val kc = new KafkaCluster(props.toMap)
-//      val consum=skc.kc.getConsumerOffet(topics)
-//      val last = skc.kc.getLastestOffset(topics)
-//      println(">>")
-//      last.map { case (tp, l) => println(s"""${tp},(${l},${consum(tp)},${l - consum(tp)})"""); (l - consum(tp)) }
-//      //skc.kc.updateOffset(ast)
-//      val rdd = skc.createKafkaRDD(topics, 100)
-//      println(rdd.count)
-//      //skc.updateOffset(rdd)
-//      Thread.sleep(100000)
-//    }
 
+    //val kc = new KafkaCluster(props.toMap)
+    val consum = skc.kc.getConsumerOffet(topics)
+    val last = skc.kc.getLastestOffset(topics)
+    last.map { case (tp, l) => println(s"""${tp},(${l},${consum(tp)},${l - consum(tp)})"""); (l - consum(tp)) }
+    //skc.kc.updateOffset(ast)
+    val rdd = skc.createKafkaRDD(topics, 100)
+    println(rdd.count)
+    //skc.updateOffset(rdd)
+    Thread.sleep(100000)
   }
 }

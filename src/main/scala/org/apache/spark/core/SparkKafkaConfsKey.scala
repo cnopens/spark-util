@@ -14,17 +14,17 @@ trait SparkKafkaConfsKey {
   val AUTO_OFFSET_RESET_CONFIG = "auto.offset.reset"
   val ENABLE_AUTO_COMMIT_CONFIG = "enable.auto.commit"
   val RECEIVE_BUFFER_CONFIG = "receive.buffer.bytes"
-  val WRONG_GROUP_FROM = "wrong.groupid.from" //如果groupid不存在或者过期选择从last还是从earliest开始
-  val CONSUMER_FROM = "kafka.consumer.from"   //从last还是从consumer开始
+  val WRONG_GROUP_FROM = "wrong.groupid.from"              //如果groupid不存在或者过期选择从last还是从earliest开始
+  val CONSUMER_FROM = "kafka.consumer.from"                //从last还是从consumer开始
 
   val KAFKAOFFSET = "kafka.offset"
   val MAX_RATE_PER_PARTITION = "spark.streaming.kafka.maxRatePerPartition"
   
   
-  val DRIVER_SSL_TRUSTSTORE_LOCATION = "driver.ssl.truststore.location"
+  val DRIVER_SSL_TRUSTSTORE_LOCATION = "driver.ssl.truststore.location"  //设置driver端的ssl文件路径
   val DRIVER_SSL_KEYSTORE_LOCATION   = "driver.ssl.keystore.location"
   
-  val EXECUTOR_SSL_TRUSTSTORE_LOCATION = "executor.ssl.truststore.location"
+  val EXECUTOR_SSL_TRUSTSTORE_LOCATION = "executor.ssl.truststore.location"  //设置 executor端的ssl文件路径
   val EXECUTOR_SSL_KEYSTORE_LOCATION   = "executor.ssl.keystore.location" 
   
   val SSL_TRUSTSTORE_LOCATION = "ssl.truststore.location"
