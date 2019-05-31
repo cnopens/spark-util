@@ -130,12 +130,17 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    * @param topics：topic列表
    * @param msgHandle ：读取kafka数据的方法
    */
-  def createDirectStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
+  def createDirectStream
+    [K: ClassTag, 
+    V: ClassTag, 
+    KD <: Decoder[K]: ClassTag, 
+    VD <: Decoder[V]: ClassTag, 
+    R: ClassTag](
     topics: Set[String],
     msgHandle: (MessageAndMetadata[K, V]) => R
     ): InputDStream[R] = {
     skm
-    .createDirectStream[K, V, KD, VD, R](
+    .createDirectStream(
         streamingContext, topics, null,msgHandle)
   }
     /**

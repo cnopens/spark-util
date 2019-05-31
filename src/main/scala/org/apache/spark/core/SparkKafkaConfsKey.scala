@@ -16,6 +16,12 @@ trait SparkKafkaConfsKey {
    
    val KAFKAOFFSET="kafka.offset"
    val MAX_RATE_PER_PARTITION="spark.streaming.kafka.maxRatePerPartition"
+   
+  val LAST="LAST"
+  val CONSUM="CONSUM"
+  val EARLIEST="EARLIEST"
+  val CUSTOM="CUSTOM"
+  val KAFKA_OFFSET="kafka.offset"
      /**
    * @author LMQ
    * @description 获取kafka的配置，一般不做特殊的配置，用这个就够了
@@ -44,4 +50,6 @@ trait SparkKafkaConfsKey {
       CONSUMER_FROM -> consumer_from, //如果是配置了CUSTOM。必须要配一个 kafka.offset的参数
       KAFKAOFFSET -> kafkaoffset)
   }
+  
+   
 }

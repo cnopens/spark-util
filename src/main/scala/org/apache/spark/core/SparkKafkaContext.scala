@@ -18,36 +18,40 @@ import org.apache.spark.streaming.kafka.SparkKafkaManager
  * @description 此类主要是用于 创建 kafkaRDD 。
  * @description 创建的kafkaRDD提供更新偏移量的能力
  */
-class SparkKafkaContext(var kp:Map[String,String]) {
+class SparkKafkaContext() {
+  var kp: Map[String, String] = null
   var sparkcontext: SparkContext = null
-  lazy val skm=new SparkKafkaManager(kp)
-  lazy val conf=sparkcontext.getConf
-  def this(kp:Map[String,String],sparkcontext: SparkContext) {
-    this(kp)
+  lazy val skm = new SparkKafkaManager(kp)
+  lazy val conf = sparkcontext.getConf
+  def this(kp: Map[String, String], sparkcontext: SparkContext) {
+    this()
+    this.kp=kp
     this.sparkcontext = sparkcontext
   }
-  def this(kp:Map[String,String],conf: SparkConf) {
-    this(kp)
+  def this(kp: Map[String, String], conf: SparkConf) {
+    this()
+    this.kp=kp
     sparkcontext = new SparkContext(conf)
   }
-  def this(kp:Map[String,String],master:String,appName:String){
-    this(kp)
-    val conf=new SparkConf()
+  def this(kp: Map[String, String], master: String, appName: String) {
+    this()
+    val conf = new SparkConf()
     conf.setMaster(master)
     conf.setAppName(appName)
     sparkcontext = new SparkContext(conf)
   }
-  def this(kp:Map[String,String],appName:String){
-    this(kp)
-    val conf=new SparkConf()
+  def this(kp: Map[String, String], appName: String) {
+    this()
+    this.kp=kp
+    val conf = new SparkConf()
     conf.setAppName(appName)
     sparkcontext = new SparkContext(conf)
   }
   def broadcast[T: ClassTag](value: T) = {
     sparkcontext.broadcast(value)
   }
-  def setKafkaParam(kp:Map[String,String]){
-    this.kp=kp
+  def setKafkaParam(kp: Map[String, String]) {
+    this.kp = kp
     skm.setKafkaParam(kp)
   }
   /**
@@ -73,9 +77,20 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    */
   def updateOffsetToLastest(
     topics: Set[String],
-    kp: Map[String, String]) = {
+    kp:     Map[String, String]) = {
     val lastestOffsets = skm.getLatestOffsets(topics)
-    skm.updateConsumerOffsets( lastestOffsets)
+    skm.updateConsumerOffsets(lastestOffsets)
+    lastestOffsets
+  }
+  /**
+   * @author LMQ
+   * @description 将当前的topic的偏移量更新至最新。（相当于丢掉未处理的数据）
+   * @return lastestOffsets ：返回最新的offset
+   */
+  def updateOffsetToLastest(
+    topics: Set[String]) = {
+    val lastestOffsets = skm.getLatestOffsets(topics)
+    skm.updateConsumerOffsets(lastestOffsets)
     lastestOffsets
   }
   /**
@@ -95,7 +110,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    */
   def updateRDDOffsets[T](
     groupId: String,
-    rdd: RDD[T]) {
+    rdd:     RDD[T]) {
     skm.updateRDDOffset(groupId, rdd)
   }
   /**
@@ -114,7 +129,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    * @param msgHandle：拉取哪些kafka数据
    */
   def kafkaRDD[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
-    topics: Set[String],
+    topics:    Set[String],
     msgHandle: (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
@@ -133,6 +148,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
         this, topics, null)
   }
+
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
@@ -141,7 +157,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    * @param msgHandle：拉取哪些kafka数据
    */
   def kafkaRDD[R: ClassTag](
-    topics: Set[String],
+    topics:    Set[String],
     msgHandle: (MessageAndMetadata[String, String]) => R) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, R](
@@ -156,9 +172,9 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    * @param msgHandle：拉取哪些kafka数据
    */
   def kafkaRDD[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
-    topics: Set[String],
+    topics:     Set[String],
     fromOffset: Map[TopicAndPartition, Long],
-    msgHandle: (MessageAndMetadata[K, V]) => R) = {
+    msgHandle:  (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
         this, topics, fromOffset, msgHandle)
@@ -171,7 +187,7 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    * @param fromOffset: 拉取数据的起始offset
    */
   def kafkaRDD(
-    topics: Set[String],
+    topics:     Set[String],
     fromOffset: Map[TopicAndPartition, Long]) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
@@ -186,9 +202,9 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    * @attention 这里没有传 msgHandle 则使用默认的msgHandle （输出为Tuple2(topic,msg）
    */
   def kafkaRDD[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
-    topics: Set[String],
+    topics:                  Set[String],
     maxMessagesPerPartition: Int,
-    msgHandle: (MessageAndMetadata[K, V]) => R) = {
+    msgHandle:               (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
         this, topics, null, maxMessagesPerPartition, msgHandle)
@@ -202,11 +218,11 @@ class SparkKafkaContext(var kp:Map[String,String]) {
    * @attention 这里没有传 msgHandle 则使用默认的msgHandle （输出为Tuple2(topic,msg）
    */
   def kafkaRDD(
-    topics: Set[String],
+    topics:                  Set[String],
     maxMessagesPerPartition: Int) = {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
-        this,topics, null, maxMessagesPerPartition)
+        this, topics, null, maxMessagesPerPartition)
   }
 }
 object SparkKafkaContext extends SparkKafkaConfsKey {
