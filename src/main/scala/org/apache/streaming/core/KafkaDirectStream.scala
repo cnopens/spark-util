@@ -7,6 +7,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.Duration
 import org.apache.spark.streaming.Seconds
 import java.util.Date
+import org.apache.spark.streaming.kafka.KafkaDataRDD
 
 /**
  * @author LinMingQiang
@@ -16,21 +17,26 @@ import java.util.Date
  * 													  2：多余的等待时间，例如batchtime为5s，但是数据处理只用了1s，会导致程序有多余的4s在处于等待。
  * 而使用while true的死循环的方式已经在生产上验证是可行的。其实sparkstreaming也是timer的方式来执行的
  */
-class KafkaDirectStreamRDD[R: ClassTag](
-  getRDDFunc: => RDD[R],
-  batchDuration:Duration
-  ) {
-  def startAndWait[T](func: RDD[R] => T) {
-    while (true) {
-      val startTime=new Date().getTime
-      val rdd = getRDDFunc
-      func(rdd)
-      val endTime=new Date().getTime
-      val useTime=endTime-startTime
-      if(useTime <= batchDuration.milliseconds/3){//如果计算所花的时间是设置时间的1/5那就程序睡眠
-        Thread.sleep(batchDuration.milliseconds/2-useTime)
-      }
-      
-    }
+class KafkaDirectStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
+    ssc:SparkKafkaStreamContext[K, V, KD, VD, R],
+    msghandle: (MessageAndMetadata[K, V]) => R,
+    var topics:Set[String]) {
+ 
+  def getKafkaRDD()={
+    ssc.sc.kafkaRDD[K, V, KD, VD, R](topics,msghandle)
+  }
+  
+  var compute = (rdd: KafkaDataRDD[K, V, KD, VD, R]) => {
+    
+    false //是否有数据
+  }
+  
+  def foreachRDD(compute:KafkaDataRDD[K, V, KD, VD, R] =>Boolean){
+    this.compute=compute
+  }
+  
+  def generateJob()={
+    val rdd=getKafkaRDD
+    compute(rdd)
   }
 }
