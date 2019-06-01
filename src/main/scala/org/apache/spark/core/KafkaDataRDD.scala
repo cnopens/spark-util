@@ -26,10 +26,17 @@ class KafkaDataRDD[K: ClassTag, V: ClassTag, U <: Decoder[_]: ClassTag, T <: Dec
   leaders: Map[TopicAndPartition, (String, Int)],
   messageHandler: MessageAndMetadata[K, V] => R)
     extends KafkaRDD[K, V, U, T, R](sc.sparkcontext, kafkaParams, offsetRanges, leaders, messageHandler) with SparkKafkaConfsKey {
-
+  /**
+   * @author LMQ
+   * @desc 更新offset至zk
+   */
   def updateOffsets(groupId: String) {
     sc.updateRDDOffsets(groupId, this)
   }
+    /**
+   * @author LMQ
+   * @desc 更新offset至zk
+   */
   def updateOffsets(kp: Map[String, String]): Boolean = {
     if (kp.contains(GROUPID)) {
       updateOffsets(kp(GROUPID))
@@ -38,6 +45,11 @@ class KafkaDataRDD[K: ClassTag, V: ClassTag, U <: Decoder[_]: ClassTag, T <: Dec
       false
     }
   }
+  
+    /**
+   * @author LMQ
+   * @desc 獲取當前rdd的offset
+   */
   def getRDDOffsets() = { sc.getRDDOffset(this) }
 
 }
