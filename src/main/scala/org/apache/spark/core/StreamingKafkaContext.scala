@@ -36,12 +36,10 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
     this.sc = sc
     streamingContext = new StreamingContext(sc, batchDuration)
   }
-  def start() {
-    streamingContext.start()
-  }
-  def awaitTermination() {
-    streamingContext.awaitTermination
-  }
+  def start() = streamingContext.start()
+  
+  def awaitTermination() = streamingContext.awaitTermination
+  
   /**
    * @author LMQ
    * @description 将当前的topic的偏移量更新至最新。（相当于丢掉未处理的数据）
@@ -87,9 +85,8 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    * @author LMQ
    * @description 获取rdd的offset
    */
-  def getRDDOffsets[T](rdd: RDD[T]) = {
-    skm.getRDDConsumerOffsets(rdd)
-  }
+  def getRDDOffsets[T](rdd: RDD[T]) = skm.getRDDConsumerOffsets(rdd)
+  
    /**
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
