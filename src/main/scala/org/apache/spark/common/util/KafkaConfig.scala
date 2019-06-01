@@ -14,7 +14,7 @@ class KafkaConfig extends Configuration{
   var groupid:String=null
   def this(path:String){
     this()
-    ConfigurationFactoryTool.initConf(path, this)
+    Configuration.initConf(path, this)
   }
   def this(kp: Map[String, String]){
     this()
@@ -23,7 +23,7 @@ class KafkaConfig extends Configuration{
   def this(path:String,kp: Map[String, String]){
     this()
     setKafkaParams(kp)
-    ConfigurationFactoryTool.initConf(path, this)
+    Configuration.initConf(path, this)
   }
   def setKafkaParams(kp: Map[String, String]){
     kafkaParams=kp
