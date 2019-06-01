@@ -23,7 +23,7 @@ class RDDKafkaWriter[T](@transient private val rdd: RDD[T]) {
   }
    /**
   * @author LMQ
-  * @description 将rdd的数据写入kafka 
+  * @description 将rdd的数据写入kafka ，并返回成功的条数
   */
   def writeToKafkaBackCount[K, V](
     producerConfig: Properties,
