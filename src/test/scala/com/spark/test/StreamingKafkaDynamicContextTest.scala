@@ -26,7 +26,8 @@ object StreamingDynamicContextTest {
       "last"    //wrong_from
       )
     val topics = Set("smartadsdeliverylog") //smartadsdeliverylog
-    val skc = new SparkKafkaContext(kp, new SparkConf().setMaster("local").set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "1").setAppName("SparkKafkaContextTest"))
+    val skc = new SparkKafkaContext(kp, new SparkConf().setMaster("local")
+        .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "1").setAppName("SparkKafkaContextTest"))
     val sskc = new StreamingDynamicContext(skc, Seconds(10))
     val kafkastream = sskc.createKafkaDstream[String, String, StringDecoder, StringDecoder, (String, String)](topics, msgHandle)
 
@@ -39,6 +40,7 @@ object StreamingDynamicContextTest {
           .collect()
           .foreach { println }
         println("################ END ##################")
+        kafkastream.fromOffset.foreach(println)
         count > 5 //是否马上执行下个批次。否则就等到下一批次时间到来 。 （这里设为，如果kafka还有数据就立即执行下一批次，否则等待10s）
     }
     sskc.start()

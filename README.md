@@ -32,7 +32,10 @@
 ```
     val kp = SparkKafkaContext.getKafkaParam( brokers,groupId,"consum", "last")
     val topics = Set("test")
-    val skc = new SparkKafkaContext(kp,new SparkConf().setMaster("local").set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10").setAppName("SparkKafkaContextTest"))
+    val skc = new SparkKafkaContext(kp,new SparkConf()
+    .setMaster("local")
+    .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10")  //kafka每个分区最大拉区数量
+    .setAppName("SparkKafkaContextTest"))
     val sskc = new StreamingDynamicContext(skc, Seconds(2))   //如果 kafka没有数据则等待2s。否则马上执行下一批次任务
     val kafkastream = sskc.createKafkaDstream[String, String, StringDecoder, StringDecoder, (String, String)](topics, msgHandle)
     kafkastream.foreachRDD { case (rdd) =>
