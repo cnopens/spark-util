@@ -13,12 +13,10 @@ abstract class DynamicDstream[R: ClassTag] {
     false //是否立刻执行下个批次
   }
 
-  def foreachRDD(computeFunc: RDD[R] => Boolean) {
+  def foreachRDD(computeFunc: RDD[R] => Boolean) { 
     this.computeFunc = computeFunc
   }
-  def batchRDD():RDD[R]       
-  def generateJob() = {
-    val rdd = batchRDD
-    computeFunc(rdd)
-  }
+  def batchRDD():RDD[R]                       //获取当前批次的rdd 。类似于 compute
+  def generateJob() =  computeFunc(batchRDD)  //执行计算操作
+  
 }
