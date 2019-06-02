@@ -12,14 +12,15 @@ import org.apache.spark.streaming.kafka.KafkaDataRDD
 /**
  * @author LinMingQiang
  * @time 2018-07-07
- * @func 不使用sparkstreaming的方式来做实时
+ * @desc 不使用sparkstreaming的方式来做实时
+ *       这里的offset每次都从zk上获取，可能会耗时，（可以参照源码改，之后有空会优化这里）  
  */
 class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
   ssc: StreamingDynamicContext,
   msghandle: (MessageAndMetadata[K, V]) => R,
   var topics: Set[String])
     extends KafkaDynamicDStream[K, V, KD, VD, R] {
-  def setTopics(topics: Set[String]) = {
+  def setTopics(topics: Set[String]) = {         //支持用户在执行流式处理的时候，动态地更改topic。//之后会添加更改offset的方法，
     this.topics = topics
   }
   var getKafkaFunc = ()
