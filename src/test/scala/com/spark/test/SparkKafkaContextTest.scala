@@ -4,6 +4,7 @@ import org.apache.spark.core.SparkKafkaContext
 import org.apache.spark.SparkConf
 import kafka.serializer.StringDecoder
 import org.apache.spark.rdd.RDD
+import org.apache.spark.common.util.Configuration
 
 object SparkKafkaContextTest {
   def main(args: Array[String]): Unit = {

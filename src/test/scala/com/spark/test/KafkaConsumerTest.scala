@@ -14,11 +14,11 @@ object KafkaConsumerTest {
     props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     val consumer = new KafkaConsumer[String, String](props);
-    consumer.subscribe(Set("MST_444"))
+    consumer.subscribe("MST_444")
     while (true) {
       val records = consumer.poll(100);
       records.foreach { x =>
-       println(x.value())
+     
       }
     }
   }

@@ -11,12 +11,10 @@ import org.apache.log4j.PropertyConfigurator
 import org.apache.spark.core.StreamingKafkaContext
 import org.apache.spark.core.SparkKafkaContext
 import org.apache.spark.common.util.KafkaConfig
-import org.apache.spark.common.util.ConfigurationFactoryTool
 import kafka.serializer.StringDecoder
 object StreamingKafkaContextTest {
   PropertyConfigurator.configure("conf/log4j.properties")
   def main(args: Array[String]): Unit = {
-    
     run
   }
   def run() {
