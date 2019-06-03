@@ -13,13 +13,20 @@ import org.apache.spark.streaming.kafka.KafkaDataRDD
  * @author LinMingQiang
  * @time 2018-07-07
  * @desc 不使用sparkstreaming的方式来做实时
- *       这里的offset每次都从zk上获取，可能会耗时，（可以参照源码改，之后有空会优化这里）  
  */
 class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
   ssc: StreamingDynamicContext,
   msghandle: (MessageAndMetadata[K, V]) => R,
   var topics: Set[String])
     extends KafkaDynamicDStream[K, V, KD, VD, R] {
+  var fromOffset: Map[TopicAndPartition, Long]=null    // 记录下次的offset的起点
+  /**
+   * @author LMQ
+   * @desc 允许用户修改offset的起点
+   */
+  def setFromOffsets(fromOffset: Map[TopicAndPartition, Long]){
+   this.fromOffset= fromOffset
+  }
   def setTopics(topics: Set[String]) = {         //支持用户在执行流式处理的时候，动态地更改topic。//之后会添加更改offset的方法，
     this.topics = topics
   }
@@ -29,7 +36,9 @@ class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassT
    * @desc 获取kafka的RDD，这里如果想自己实现也可以，类似DStream里面的compute
    */
   override def batchRDD() = {
-    ssc.sc.kafkaRDD[K, V, KD, VD, R](topics, msghandle)
+    val kafkardd=ssc.sc.kafkaRDD[K, V, KD, VD, R](topics,fromOffset, msghandle)
+    fromOffset=kafkardd.getRDDOffsets()
+    kafkardd
   }
 
 }
