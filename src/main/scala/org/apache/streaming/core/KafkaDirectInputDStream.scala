@@ -8,7 +8,7 @@ import org.apache.spark.streaming.Duration
 import org.apache.spark.streaming.Seconds
 import java.util.Date
 import org.apache.spark.streaming.kafka.KafkaDataRDD
-
+ 
 /**
  * @author LinMingQiang
  * @time 2018-07-07
@@ -19,7 +19,7 @@ class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassT
   msghandle: (MessageAndMetadata[K, V]) => R,
   var topics: Set[String])
     extends KafkaDynamicDStream[K, V, KD, VD, R] {
-  var fromOffset: Map[TopicAndPartition, Long]=null    // 记录下次的offset的起点
+  
   /**
    * @author LMQ
    * @desc 允许用户修改offset的起点
