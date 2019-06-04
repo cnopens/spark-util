@@ -130,19 +130,20 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
    */
   def updateConsumerOffsets(
     groupId: String,
-    offsets: Map[TopicAndPartition, Long]): Unit = {
+    offsets: Map[TopicAndPartition, Long]) = {
     val o = kc.setConsumerOffsets(groupId, offsets)
     if (o.isLeft)
       log.error(s"Error updating the offset to Kafka cluster: ${o.left.get}")
+      o
   }
   /**
    * @author LMQ
    * @description 更新消费者的offset至zookeeper
    */
   def updateConsumerOffsets(
-    offsets: Map[TopicAndPartition, Long]): Unit = {
+    offsets: Map[TopicAndPartition, Long]):Either[KafkaCluster.Err, Map[TopicAndPartition, Short]]= {
     val groupId = kp.get(GROUPID).get
-    updateConsumerOffsets( groupId, offsets)
+    updateConsumerOffsets(groupId, offsets)
   }
   /**
    * @author LMQ
