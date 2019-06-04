@@ -11,7 +11,6 @@ import org.apache.log4j.PropertyConfigurator
 import org.apache.spark.core.StreamingKafkaContext
 import org.apache.spark.core.SparkKafkaContext
 import org.apache.spark.common.util.KafkaConfig
-import org.apache.spark.common.util.ConfigurationFactoryTool
 import kafka.serializer.StringDecoder
 import org.apache.spark.streaming.kafka010.DirectKafkaInputDStream
 import org.apache.spark.streaming.kafka010.CanCommitOffsets
@@ -65,23 +64,7 @@ object StreamingKafkaContextTest {
     re
   }
 
-  /**
-   * 使用配置文件的形式
-   */
-  def runJobWithConf() {
-    val conf = new ConfigurationTest()
-    ConfigurationFactoryTool.initConf("conf/config.properties", conf)
-    initJobConf(conf)
-    println(conf.getKV())
-    val scf = new SparkConf().setMaster("local[2]").setAppName("Test")
-    val sc = new SparkContext(scf)
-    val ssc = new StreamingKafkaContext(conf.kafkaParams, sc, Seconds(5))
-    val ds = ssc.createDirectStream[String, String](conf)
-    ds.foreachRDD { rdd => rdd.foreach(println) }
-    ssc.start()
-    ssc.awaitTermination()
-
-  }
+ 
   /**
    * 初始化配置文件
    */

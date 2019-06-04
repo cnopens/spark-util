@@ -13,12 +13,7 @@ trait SparkKafkaManagerBase extends KafkaSparkTool{
   val CUSTOM="CUSTOM"
   val KAFKA_OFFSET="kafka.offset"
   override var kp:Map[String, String]
-   /**
-   * @author LMQ
-   * @description  默认的一个handle (key,value)=>(topic,msg)
-   */
-  def msgHandle = (mmd: MessageAndMetadata[String, String]) => (mmd.topic, mmd.message)
-    /**
+  /**
    * @author LMQ
    * @description 获取RDD的offset。但这个rdd必须继承HasOffsetRanges 的
    */
