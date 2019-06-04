@@ -14,6 +14,7 @@ import org.apache.spark.streaming.kafka010.OffsetRange
 import org.apache.spark.streaming.kafka010.KafkaRDD
 import org.apache.kafka.common.TopicPartition
 import java.{util=>ju}
+import org.apache.spark.core.SparkKafkaConfsKey
 /**
  * @author LMQ
  * @description 自定义一个kafkaRDD
@@ -27,19 +28,32 @@ class KafkaDataRDD[K: ClassTag, V: ClassTag](
   preferredHosts: java.util.Map[TopicPartition, String],
   useConsumerCache:   Boolean)
   extends KafkaRDD[K, V](
-    sc.sparkcontext, kafkaParam, offsetRanges, preferredHosts, useConsumerCache) {
+    sc.sparkcontext, kafkaParam, offsetRanges, preferredHosts, useConsumerCache) with SparkKafkaConfsKey {
 
+  /**
+   * @author LMQ
+   * @desc 更新offset至zk
+   */
   def updateOffsets(groupId: String) {
     sc.updateRDDOffsets(groupId, this)
   }
+    /**
+   * @author LMQ
+   * @desc 更新offset至zk
+   */
   def updateOffsets(kp: Map[String, String]): Boolean = {
-    if (kp.contains("group.id")) {
-      updateOffsets(kp("group.id"))
+    if (kp.contains(GROUPID)) {
+      updateOffsets(kp(GROUPID))
       true
     } else {
       false
     }
   }
+  
+    /**
+   * @author LMQ
+   * @desc 獲取當前rdd的offset
+   */
   def getRDDOffsets() = { sc.getRDDOffset(this) }
 
 }

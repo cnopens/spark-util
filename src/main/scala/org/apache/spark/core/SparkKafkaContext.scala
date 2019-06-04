@@ -20,7 +20,7 @@ import org.apache.spark.streaming.kafka.KafkaDataRDD
  */
 class SparkKafkaContext(var kp:Map[String,String]) {
   var sparkcontext: SparkContext = null
-  lazy val skm=new SparkKafkaManager(kp)
+  lazy val skm=new SparkKafkaManager(kp)                      //这个类似于KafkaCluster
   lazy val conf=sparkcontext.getConf
   def this(kp:Map[String,String],sparkcontext: SparkContext) {
     this(kp)

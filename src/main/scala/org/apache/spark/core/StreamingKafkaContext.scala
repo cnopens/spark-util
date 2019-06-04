@@ -24,7 +24,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
  */
 class StreamingKafkaContext(var kp:Map[String,String]) {
   var streamingContext: StreamingContext = null
-  lazy val skm=new StreamingKafkaManager(kp)
+  lazy val skm=new StreamingKafkaManager(kp)                           //这个类似于KafkaCluster
   var sc: SparkContext = null
   def this(kp:Map[String,String],streamingContext: StreamingContext) {
     this(kp)
