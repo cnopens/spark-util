@@ -63,7 +63,7 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String])
     val offsetRange = getOffsetRange(consumerOffsets, untilOffsets)
     new KafkaDataRDD[K, V](
       sc,
-      fixKp,
+      fixKafkaExcutorParams,
       offsetRange,
       ju.Collections.emptyMap[TopicPartition, String](),
       true)
@@ -103,7 +103,7 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String])
     val offsetRange = getOffsetRange(consumerOffsets, untilOffsets)
     new KafkaDataRDD[K, V](
       sc,
-      fixKp,
+      fixKafkaExcutorParams,
       offsetRange,
       ju.Collections.emptyMap[TopicPartition, String](),
       true)

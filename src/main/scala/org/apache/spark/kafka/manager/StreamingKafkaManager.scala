@@ -66,7 +66,7 @@ class StreamingKafkaManager(override var kp:Map[String, String])
       LocationStrategies.PreferConsistent,
       ConsumerStrategies.Subscribe[K, V](
           topics.asJavaCollection,
-          kp.toMap[String, Object].asJava,
+          fixKafkaExcutorParams,
           consumerOffsets
           .map{case(tp,lo)=>(new TopicPartition(tp.topic,tp.partition),new java.lang.Long(lo))}
           .asJava)
@@ -111,7 +111,7 @@ class StreamingKafkaManager(override var kp:Map[String, String])
       LocationStrategies.PreferConsistent,
       ConsumerStrategies.Subscribe[K, V](
           topics.asJavaCollection,
-          kp.toMap[String, Object].asJava,
+          fixKafkaExcutorParams,
           consumerOffsets
           .map{case(tp,lo)=>(new TopicPartition(tp.topic,tp.partition),new java.lang.Long(lo))}
           .asJava)
