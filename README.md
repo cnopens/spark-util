@@ -4,6 +4,14 @@
 **spark version 1.6.0** <br/>
 **kafka version 0.8** <br/>
 
+## POINT
+-------------------
+> 支持动态调节 streaming 的 批次间隔时间 （不同于sparkstreaming 的 定长的批次间隔） <br/>
+> 支持在streaming过程中 重设 topics，用于生产中动态地增加删减数据源 <br/>
+> 提供spark-streaming-kafka-0-10_2.10 spark 1.6 来支持 kafka的ssl <br/>
+> 支持rdd.updateOffset 来管理偏移量。 <br/>
+-------------------
+
 * 封装 StreamingDynamicContext 来实现动态调整 流式的批次
 * 可在sparkstreaming的过程中 动态地修改topic 
 * 添加了 sparkStreaming 1.6 -> kafka 010  的 spark-streaming-kafka-0-10_2.10 。用以支持ssl 。
@@ -48,12 +56,7 @@
 #  StreamingKafkaContext
 > StreamingKafkaContext 流式 
 ```
-	 var kp = Map[String, String](
-			  "metadata.broker.list" -> brokers,
-			  "serializer.class" -> "kafka.serializer.StringEncoder",
-			  "group.id" -> "testGroupid",
-			  StreamingKafkaContext.WRONG_GROUP_FROM -> "last",//EARLIEST
-			  StreamingKafkaContext.CONSUMER_FROM -> "consum")
+   val kp = SparkKafkaContext.getKafkaParam( brokers,groupId,"consum", "last")
     val sc = new SparkContext(new SparkConf().setMaster("local[2]").setAppName("Test"))
     val ssc = new StreamingKafkaContext(kp,sc, Seconds(5))
     val topics = Set("smartadsdeliverylog")
@@ -72,11 +75,7 @@
 #  StreamingKafkaContext With Confguration
 > StreamingKafkaContext （配置文件，便于管理。适用于项目开发）
 ```
-    var kp = Map[String, String](
-      "metadata.broker.list" -> brokers,
-      "serializer.class" -> "kafka.serializer.StringEncoder",
-      "group.id" -> "group.id",
-      "kafka.last.consum" -> "last")
+     val kp = SparkKafkaContext.getKafkaParam( brokers,groupId,"consum", "last")
     val conf = new KafkaConfig("conf/config.properties",kp)
     val topics = Set("test")
     conf.setTopics(topics)
@@ -95,14 +94,10 @@
 > SparkKafkaContext （适用于离线读取kafka数据）
 ```
     val groupId = "test"
-    val kp = SparkKafkaContext.getKafkaParam(brokers,groupId,
-      "earliest", // last/consum/custom/earliest
-      "earliest" //wrong_from
-    )
+    val kp = SparkKafkaContext.getKafkaParam( brokers,groupId,"consum", "last")
     val topics = Set("test")
     val skc = new SparkKafkaContext(kp,new SparkConf().setMaster("local")
-        										.set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10")
-        										.setAppName("SparkKafkaContextTest"))
+     .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10").setAppName("SparkKafkaContextTest"))
     val kafkadataRdd = skc.kafkaRDD[((String, Int, Long), String)](topics, msgHandle2) //根据配置开始读取
     //RDD.rddToPairRDDFunctions(kafkadataRdd)
     kafkadataRdd.foreach(println)
@@ -112,13 +107,9 @@
 #  KafkaWriter 
 > KafkaWriter （将rdd数据写入kafka）
 ```
- val sc = new SparkContext(new SparkConf().setMaster("local[2]").setAppName("Test"))
+   val sc = new SparkContext(new SparkConf().setMaster("local[2]").setAppName("Test"))
     val topics = Set("test")
-    var kp = Map[String, String](
-      "metadata.broker.list" -> brokers,
-      "serializer.class" -> "kafka.serializer.StringEncoder",
-      "group.id" -> "test",
-      "kafka.last.consum" -> "consum")
+    val kp = SparkKafkaContext.getKafkaParam( brokers,groupId,"consum", "last")
     val ssc = new StreamingKafkaContext(kp,sc, Seconds(5))
     
     val ds = ssc.createDirectStream(topics)
