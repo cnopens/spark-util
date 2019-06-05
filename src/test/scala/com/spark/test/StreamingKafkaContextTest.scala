@@ -33,9 +33,15 @@ object StreamingKafkaContextTest {
       .setMaster("local[2]")
       .setAppName("Test")
       .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "1"))
+            //如果需要使用ssl验证，需要设置一下四个参数
     var kp = StreamingKafkaContext.getKafkaParam(brokers, "test", "consum", "EARLIEST")
-    val ssc = new StreamingKafkaContext(kp,sc, Seconds(5))
-    val consumOffset = getConsumerOffset(kp).foreach(println)
+    kp.put(SparkKafkaContext.DRIVER_SSL_TRUSTSTORE_LOCATION, "/mnt/kafka-key/client.truststore.jks")
+    kp.put(SparkKafkaContext.DRIVER_SSL_KEYSTORE_LOCATION, "/mnt/kafka-key/client.keystore.jks")
+    kp.put(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION, "client.truststore.jks")
+    kp.put(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION, "client.keystore.jks")
+
+    val ssc = new StreamingKafkaContext(kp.toMap,sc, Seconds(5))
+    val consumOffset = getConsumerOffset(kp.toMap).foreach(println)
     val topics = Set("test1")
     val ds = ssc.createDirectStream[String, String](topics)
     ds.foreachRDD { rdd =>
