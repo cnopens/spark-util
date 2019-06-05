@@ -6,6 +6,9 @@ import org.apache.spark.streaming.kafka.KafkaCluster.LeaderOffset
 import org.slf4j.LoggerFactory
 import org.apache.spark.core.SparkKafkaConfsKey
 import org.apache.spark.streaming.kafka.KafkaCluster
+import org.apache.spark.core.SparkKafkaContext
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import scala.collection.JavaConversions._
 
 /**
  * @author LMQ
@@ -16,23 +19,63 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   var logname = "KafkaSparkTool" //外部可重写
   lazy val defualtFrom: String = "LAST"
   lazy val log = LoggerFactory.getLogger(logname)
-  var kp:Map[String, String]
+  var kp: Map[String, String]
   lazy val kc: KafkaCluster = new KafkaCluster(kp)
-  lazy val fixKp=fixKafkaParams(kp)
+  lazy val fixKp = fixKafkaParams(kp)
+  var excutorFixKp: java.util.HashMap[String, Object] = null //用于excutor的配置
   /**
    * @author LMQ
    * @func 重置kafka配置参数
    */
-  def setKafkaParam(kp:Map[String, String]){
-    this.kp=kp
+  def setKafkaParam(kp: Map[String, String]) {
+    this.kp = kp
   }
-def fixKafkaParams(kafkaParams: Map[String, String]) = {
-   val fixKp=new java.util.HashMap[String,Object]()
-   kafkaParams.foreach{case(x,y)=>fixKp.put(x,y)}
+
+  /**
+   * @author LMQ
+   * @time 2018-10-31
+   * @desc 修正kp的配置
+   */
+  def fixKafkaParams(kafkaParams: Map[String, String]) = {
+    val fixKp = new java.util.HashMap[String, Object]()
+    kafkaParams.foreach { case (x, y) => fixKp.put(x, y) }
     fixKp.put(ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
     fixKp.put(AUTO_OFFSET_RESET_CONFIG, "none")
     fixKp.put(RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
-   fixKp
+    if (fixKp.containsKey(DRIVER_SSL_TRUSTSTORE_LOCATION)) {
+      fixKp.put(SSL_TRUSTSTORE_LOCATION, fixKp.get(DRIVER_SSL_TRUSTSTORE_LOCATION).toString())
+    }
+    if (fixKp.containsKey(DRIVER_SSL_KEYSTORE_LOCATION)) {
+      fixKp.put(SSL_KEYSTORE_LOCATION, fixKp.get(DRIVER_SSL_KEYSTORE_LOCATION).toString())
+    }
+    fixKp.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
+    if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG)|| fixKp.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
+      fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+    fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
+    fixKp
+  }
+
+  /**
+   * @author LMQ
+   * @time 2018-10-31
+   * @desc 修正kp的配置。当使用spark读取kafka数据的时候，ssl配置文件的路径不能写全路径（除非每台node下都有这个路径）。建议使用--files 来上传ssl配置。这里提供了修正一开始的kp
+   */
+  def fixKafkaExcutorParams() = {
+    if (excutorFixKp == null) {
+      excutorFixKp = new java.util.HashMap[String, Object]()
+      fixKp.foreach { case (x, y) => excutorFixKp.put(x, y) }
+      if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION)) {
+        excutorFixKp.put(SparkKafkaContext.SSL_TRUSTSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION))
+      }
+      if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION)) {
+        excutorFixKp.put(SparkKafkaContext.SSL_KEYSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION))
+      }
+      fixKp.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
+      if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG)|| fixKp.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
+        fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+      fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
+    }
+    excutorFixKp
   }
   /**
    * @author LMQ
@@ -48,7 +91,7 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
    */
   def getConsumerOffset(
     groupId: String,
-    topics:  Set[String]) = {
+    topics: Set[String]) = {
     var offsets: Map[TopicAndPartition, Long] = Map()
     topics.foreach { topic =>
       var hasConsumed = true //是否消费过  ,true为消费过
@@ -66,7 +109,7 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
       if (consumerOffsetsE.isRight) {
         offsets ++= (getEffectiveOffset(partitions, consumerOffsetsE.right.get, last_earlies))
       } else {
-        offsets ++= (getNewGroupIdOffset(groupId, partitions,last_earlies))
+        offsets ++= (getNewGroupIdOffset(groupId, partitions, last_earlies))
       }
     }
     offsets
@@ -78,8 +121,8 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
    * @func 获取一个新grouid的offset （last_earlies决定是从最新还是最旧）
    */
   def getNewGroupIdOffset(
-    groupId:      String,
-    partitions:   Set[TopicAndPartition],
+    groupId: String,
+    partitions: Set[TopicAndPartition],
     last_earlies: String) = {
     log.warn(" NEW  GROUP   ID  : " + groupId)
     log.warn(" NEW  GROUP  FROM : " + last_earlies)
@@ -98,9 +141,9 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
    * @func 获取有效的offset
    */
   def getEffectiveOffset(
-    partitions:        Set[TopicAndPartition],
+    partitions: Set[TopicAndPartition],
     consumerOffsetMap: Map[TopicAndPartition, Long],
-    last_earlies:      String) = {
+    last_earlies: String) = {
     val earliestinfoE = kc.getEarliestLeaderOffsets(partitions)
     if (earliestinfoE.isLeft) throw new SparkException(earliestinfoE.left.toString())
     val earliestOffsetsMap = earliestinfoE.right.get //获取最早的偏移量
@@ -121,7 +164,7 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
               case "EARLIEST" => (tp -> earliestOffset)
               case _          => (tp -> lastOffset)
             }
-          }else (tp -> consumerOffset)
+          } else (tp -> consumerOffset)
 
         } else { //增加了新分区
           last_earlies match {
@@ -150,7 +193,7 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
   def updateConsumerOffsets(
     offsets: Map[TopicAndPartition, Long]): Unit = {
     val groupId = kp.get(GROUPID).get
-    updateConsumerOffsets( groupId, offsets)
+    updateConsumerOffsets(groupId, offsets)
   }
   /**
    * @author LMQ
@@ -165,7 +208,7 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
         new TopicAndPartition(offsetArr(0), offsetArr(1).toInt) -> offsetArr(2).toLong
       }
       .toMap
-    updateConsumerOffsets( groupId, offsetArr)
+    updateConsumerOffsets(groupId, offsetArr)
   }
   /**
    * @author LMQ
@@ -211,7 +254,7 @@ def fixKafkaParams(kafkaParams: Map[String, String]) = {
    * @func 解决偶尔读不到kafka信息的情况
    */
   def latestLeaderOffsets(
-    retries:        Int,
+    retries: Int,
     currentOffsets: Map[TopicAndPartition, Long]): Map[TopicAndPartition, LeaderOffset] = {
     val o = kc.getLatestLeaderOffsets(currentOffsets.keySet)
     // Either.fold would confuse @tailrec, do it manually
