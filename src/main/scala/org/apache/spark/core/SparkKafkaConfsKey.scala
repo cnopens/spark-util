@@ -52,7 +52,7 @@ trait SparkKafkaConfsKey {
     consumer_from: String,
     wrong_from: String,
     kafkaoffset: String = "") = {
-    Map[String, String](
+    scala.collection.mutable.Map[String, String](
       BROKER -> brokers,
       BOOTSTRAP -> brokers,
       AUTO_COMMIT -> "false", //默认不自动提交
