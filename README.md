@@ -5,12 +5,6 @@
 **kafka version 0.8** <br/>
 
 ## POINT
--------------------
-> 支持动态调节 streaming 的 批次间隔时间 （不同于sparkstreaming 的 定长的批次间隔） <br/>
-> 支持在streaming过程中 重设 topics，用于生产中动态地增加删减数据源 <br/>
-> 提供spark-streaming-kafka-0-10_2.10 spark 1.6 来支持 kafka的ssl <br/>
-> 支持rdd.updateOffset 来管理偏移量。 <br/>
--------------------
 
 * 封装 StreamingDynamicContext 来实现动态调整 流式的批次
 * 可在sparkstreaming的过程中 动态地修改topic 
@@ -29,7 +23,6 @@
 * 提供 StreamingKafkaContext，SparkKafkaContext 使用更方便
 * 提供 KafkaDataRDD，封装了更新offset等操作在里面。不用再用隐式转换来添加这些功能了（rdd.updateOffsets(kp)）
 * 提供一个SparkKafkaUtil。可以用来单独获取kafka信息，如最新偏移量等信息
-* 修改 增加updateOffsets方法不用提供group id（必须kp里面有）
 * 增加 更新偏移量至最新操作。updataOffsetToLastest
 * 修改，在kp里面设置spark.streaming.kafka.maxRatePerPartition。
 * 支持 topic新增分区数时的offset问题。（默认是从 0 开始 ）
