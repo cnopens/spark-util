@@ -1,7 +1,6 @@
 package com.spark
 
 import kafka.message.MessageAndMetadata
-import org.apache.spark.common.util.ConfigurationFactoryTool
 import org.apache.kafka.common.serialization.StringSerializer
 import org.apache.kafka.clients.producer.ProducerRecord
 
