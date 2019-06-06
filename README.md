@@ -1,7 +1,7 @@
 # spark-kafka
 
 **scala version 2.10** <br/>
-**spark version 1.6 +** <br/>
+**spark version 1.6.0** <br/>
 **kafka version 0.8** <br/>
 
 ## POINT
