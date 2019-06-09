@@ -26,6 +26,7 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   def setKafkaParam(kp:Map[String, String]){
     this.kp=kp
   }
+  
   /**
    * @author LMQ
    * @description 获取kakfa消费者的offset
@@ -179,6 +180,15 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
       errs => throw new SparkException(errs.mkString("\n")),
       ok => ok)
     fromOffsets
+  }
+    /**
+   * @author LMQ
+   * @description 获取最新的offset,带上host信息
+   */
+  def getLatestLeaderOffsets(topics: Set[String])={
+    val o = kc.getLatestLeaderOffsets(kc.getPartitions(topics).right.get)
+    // Either.fold would confuse @tailrec, do it manually
+    o.right.get
   }
   /**
    * @author LMQ
