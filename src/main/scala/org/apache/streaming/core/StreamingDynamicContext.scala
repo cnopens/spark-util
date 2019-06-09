@@ -32,6 +32,9 @@ class StreamingDynamicContext {
     if (kafkaDstream == null) {
       log.error("kafkaDstream is Null ")
     } else {
+      for{
+       rateController<- kafkaDstream.rateController
+      } this.sc.sparkcontext.addSparkListener(rateController) //添加监听器
       while (!stop) {
         val startTime = new Date().getTime
         val hasData = kafkaDstream.generateJob()
