@@ -60,7 +60,9 @@ private[streaming] class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <:
     rateController.foreach { x => x.setBatchSubmitTime(new Date().getTime) }
     kafkardd
   }
-
+  override def onBatchCompleted(){
+    rateController.foreach { x => x.onBatchCompleted() }
+  }
   /**
    * @author LMQ
    * @time 2019-06-09
