@@ -8,13 +8,15 @@ import org.apache.spark.scheduler.SparkListenerStageSubmitted
 import org.apache.spark.scheduler.SparkListenerStageCompleted
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.Duration
+import scala.collection.mutable.ArrayBuffer
 
 class KafkaRateController(val rateEstimator: PIDRateEstimator)
     extends SparkListener {
-  var jobUseTime = -1L //实际的逻辑运行时间，但是一个streaming可以有多个job，要累加起来
+  var jobUseTime  = new ArrayBuffer[Long] //实际的逻辑运行时间，但是一个streaming可以有多个job，要累加起来
   var jobStartTime = -1L
+  var jobLastEndTime = -1L
   var batchSubmitTime = -1L //batch的启动时间
-  var scheduleDelay = -1L
+  var scheduleDelay = new ArrayBuffer[Long]
   var rateLimit: Long = 0L
   var currentElems = 0L
   
@@ -27,14 +29,17 @@ class KafkaRateController(val rateEstimator: PIDRateEstimator)
   }
   override def onJobStart(jobStart: SparkListenerJobStart) {
     jobStartTime = new Date().getTime
-    scheduleDelay = jobStartTime - batchSubmitTime
-    println("scheduleDelay ", scheduleDelay)
+    if(jobLastEndTime > 0){
+    	 scheduleDelay.+=(jobStartTime - jobLastEndTime)
+    }else {
+       scheduleDelay.+=(jobStartTime - batchSubmitTime)
+    }
+    println("scheduleDelay ", scheduleDelay.mkString(","))
   }
   override def onJobEnd(jobEnd: SparkListenerJobEnd) {
-    val jobendtime = new Date().getTime
-    jobUseTime = jobendtime - jobStartTime
-    println("job end ", jobUseTime)
-    computeAndPublish(new Date().getTime, currentElems, jobUseTime, scheduleDelay)
+     jobLastEndTime = new Date().getTime
+    jobUseTime.+=(jobLastEndTime - jobStartTime)
+    println("job end ", jobUseTime.mkString(","))
   }
   /**
    * Compute the new rate limit and publish it asynchronously.
@@ -49,7 +54,17 @@ class KafkaRateController(val rateEstimator: PIDRateEstimator)
     }
 
   }
-
+  
+  def onBatchCompleted(){
+    val totalJobUseTime = jobUseTime.sum
+    val totalScheduleDelay = scheduleDelay.sum
+    println("total : ",totalJobUseTime,totalScheduleDelay)
+    computeAndPublish(new Date().getTime, currentElems, totalJobUseTime, totalScheduleDelay)
+    jobUseTime.clear()
+    scheduleDelay.clear()
+    jobLastEndTime = -1L
+    
+  }
   def getLatestRate(): Long = rateLimit
 
 }
