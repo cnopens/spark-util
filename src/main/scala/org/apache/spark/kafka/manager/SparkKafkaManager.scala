@@ -137,12 +137,8 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
           case _        => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
         }
       } else fromOffset
-    val latestLeaderOffsets = getLatestLeaderOffsets(topics)
-    val lastOffset = latestLeaderOffsets.map { case (tp, lo) => tp -> lo.offset }.toMap
-    val untilOffsets = clamp(consumerOffsets, latestLeaderOffsets,maxMessagesPerPartition)
-
-    if(maxMessagesPerPartition.isDefined) maxMessagesPerPartition.get.foreach(println) 
-    
+    val untilOffsets = clamp(latestLeaderOffsets(consumerOffsets), consumerOffsets, maxMessagesPerPartition)
+    if (maxMessagesPerPartition.isDefined) maxMessagesPerPartition.get.foreach(println)
     KafkaDataRDD[K, V, KD, VD, R](
       sc,
       kp,
@@ -191,9 +187,10 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
    * 							代表每个topic.partition->offset
    * @description 由maxMessagesPerPartition限制最多读取多少数据。解决了新增一个分区读取不到的问题
    */
-  def clamp(lastOffsets: Map[TopicAndPartition, LeaderOffset],
-            currentOffsets: Map[TopicAndPartition, Long],
-            maxMessagesPerPartition: Int): Map[TopicAndPartition, LeaderOffset] = {
+  def clamp(
+    lastOffsets: Map[TopicAndPartition, LeaderOffset],
+    currentOffsets: Map[TopicAndPartition, Long],
+    maxMessagesPerPartition: Int): Map[TopicAndPartition, LeaderOffset] = {
     if (maxMessagesPerPartition > 0) {
       lastOffsets.map {
         case (tp, lo) =>
@@ -210,8 +207,8 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
    * @description 增加了速率控制
    */
   def clamp(
-    currentOffsets: Map[TopicAndPartition, Long],
     lastOffsets: Map[TopicAndPartition, LeaderOffset],
+    currentOffsets: Map[TopicAndPartition, Long],
     maxMessagesPerPartition: Option[Map[TopicAndPartition, Long]]): Map[TopicAndPartition, LeaderOffset] = {
 
     maxMessagesPerPartition.map { mmp =>
