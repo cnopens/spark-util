@@ -24,6 +24,9 @@ abstract class KafkaDynamicDStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: C
   def foreachRDD(computeFunc: KafkaDataRDD[K, V, KD, VD, R] => Boolean) {
     this.computeFunc = computeFunc
   }
+  /**
+   * @desc 用来返回批次的rdd
+   */
   def batchRDD(): KafkaDataRDD[K, V, KD, VD, R] // 用来获取当前批次的kafkardd
   def generateJob() = computeFunc(batchRDD) //执行job
   def onBatchCompleted():Unit
