@@ -201,7 +201,7 @@ class SparkKafkaContext() {
     msgHandle: (MessageAndMetadata[K, V]) => R) = {
     skm
       .createKafkaRDD[K, V, KD, VD, R](
-        this, topics,fromOffset,maxMessagesPerPartition, msgHandle)
+        this, topics, fromOffset, maxMessagesPerPartition, msgHandle)
   }
 
   /**
@@ -217,6 +217,29 @@ class SparkKafkaContext() {
     skm
       .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
         this, topics, fromOffset)
+  }
+  /**
+   * @author LMQ
+   * @time 2019-06-13
+   * @description 创建一个kafkaRDD。从kafka拉取数据
+   * @param kp：kafka配置参数
+   * @param topics： topics
+   * @param fromOffset: 拉取数据的起始offset
+   * @param untilOffset : 结束offset
+   */
+  def kafkaRDD(
+    topics: Set[String],
+    fromOffset: Map[TopicAndPartition, Long],
+    untilOffset: Map[TopicAndPartition, Long]) = {
+    if (untilOffset == null) {
+      skm
+        .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
+          this, topics, fromOffset)
+    } else {
+      skm
+        .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
+          this, topics, fromOffset, untilOffset, this.skm.msgHandle)
+    }
   }
   /**
    * @author LMQ

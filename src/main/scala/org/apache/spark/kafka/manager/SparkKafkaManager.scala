@@ -52,7 +52,6 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
         }
       } else fromOffset
 
-    //consumerOffsets.foreach(x=>log.info(x.toString))
     val maxMessagesPerPartition = if (kp.contains(MAX_RATE_PER_PARTITION)) kp.get(MAX_RATE_PER_PARTITION).get.toInt
     else sc.conf.getInt(MAX_RATE_PER_PARTITION, 0) //0表示没限制
     val untilOffsets = clamp(latestLeaderOffsets(consumerOffsets), consumerOffsets, maxMessagesPerPartition)
@@ -145,7 +144,47 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
       untilOffsets,
       messageHandler)
   }
-
+ /**
+   * @author LMQ
+   * @time 2018.03.07
+   * @description 创建一个 kafkaDataRDD
+   * @description 这个kafkaDataRDD是自己定义的，可以自己添加很多自定义的功能（如：更新offset）
+   * @description 读取kafka数据有四种方式：
+   * @param 1 ： 从最新开始  = LAST
+   * 				2 ：从上次消费开始  = CONSUM
+   * 				3:从最早的offset开始消费  = EARLIEST
+   * 				4：从自定义的offset开始  = CUSTOM
+   * @param maxMessagesPerPartition ： 限制读取的kafka数据量（每个分区多少数据）
+   */
+  def createKafkaRDD[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
+    sc: SparkKafkaContext,
+    topics: Set[String],
+    fromOffset: Map[TopicAndPartition, Long],
+    untilOffset:Map[TopicAndPartition, Long],
+    messageHandler: MessageAndMetadata[K, V] => R): KafkaDataRDD[K, V, KD, VD, R] = {
+    if (kp == null || !kp.contains(GROUPID)) throw new SparkException(s"kafkaParam is Null or ${GROUPID} is not setted")
+    val groupId = kp.get(GROUPID).get
+    val consumerOffsets: Map[TopicAndPartition, Long] =
+      if (fromOffset == null) {
+        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
+        else defualtFrom
+        last.toUpperCase match {
+          case LAST     => getLatestOffsets(topics)
+          case CONSUM   => getConsumerOffset(groupId, topics)
+          case EARLIEST => getEarliestOffsets(topics)
+          case CUSTOM   => getSelfOffsets()
+          case _        => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
+        }
+      } else fromOffset
+    val lastOffsets=latestLeaderOffsets(consumerOffsets)
+    val untilOffsets=untilOffset.map{case(tp,l)=>tp -> lastOffsets(tp).copy(offset = l)}
+    KafkaDataRDD[K, V, KD, VD, R](
+      sc,
+      kp,
+      consumerOffsets,
+      untilOffsets,
+      messageHandler)
+  }
   /**
    * @author LMQ
    * @description 获取自定义的offset值
