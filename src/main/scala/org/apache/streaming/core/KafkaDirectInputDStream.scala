@@ -92,7 +92,6 @@ private[streaming] class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <:
   def maxMessagesPerPartition(
     lastOffset: Map[TopicAndPartition, Long]): Option[Map[TopicAndPartition, Long]] = {
     val estimatedRateLimit = rateController.map(_.getLatestRate().toInt)
-    println("estimatedRateLimit  : ", estimatedRateLimit, maxRateLimitPerPartition)
     // calculate a per-partition rate limit based on current lag
     val effectiveRateLimitPerPartition = estimatedRateLimit.filter(_ > 0) match {
       case Some(rate) =>
@@ -107,7 +106,6 @@ private[streaming] class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <:
             // 防止速率降到0的时候，返回None，导致直接取到last的数据，所以这里加了Math.max。我看源码里面是没有这个处理的。
             val backpressureRate = Math.max(Math.round(lag / totalLag.toFloat * rate), 1)
             tp -> (if (maxRateLimitPerPartition > 0) {
-              println(lag, totalLag.toFloat, rate, backpressureRate, maxRateLimitPerPartition)
               Math.min(backpressureRate, maxRateLimitPerPartition)
             } else backpressureRate)
         }

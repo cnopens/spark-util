@@ -43,7 +43,6 @@ class PIDRateEstimator(
       schedulingDelay: Long // in milliseconds
     ): Option[Double] = {
     this.synchronized {
-      println(batchIntervalMillis,time,latestTime,numElements,processingDelay,schedulingDelay)
       if (time > latestTime && numElements > 0 && processingDelay > 0) {
 
         // in seconds, should be close to batchDuration
