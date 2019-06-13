@@ -34,12 +34,10 @@ class KafkaRateController(val rateEstimator: PIDRateEstimator)
     }else {
        scheduleDelay.+=(jobStartTime - batchSubmitTime)
     }
-    println("scheduleDelay ", scheduleDelay.mkString(","))
   }
   override def onJobEnd(jobEnd: SparkListenerJobEnd) {
      jobLastEndTime = new Date().getTime
     jobUseTime.+=(jobLastEndTime - jobStartTime)
-    println("job end ", jobUseTime.mkString(","))
   }
   /**
    * Compute the new rate limit and publish it asynchronously.
@@ -58,7 +56,6 @@ class KafkaRateController(val rateEstimator: PIDRateEstimator)
   def onBatchCompleted(){
     val totalJobUseTime = jobUseTime.sum
     val totalScheduleDelay = scheduleDelay.sum
-    println("total : ",totalJobUseTime,totalScheduleDelay)
     computeAndPublish(new Date().getTime, currentElems, totalJobUseTime, totalScheduleDelay)
     jobUseTime.clear()
     scheduleDelay.clear()
