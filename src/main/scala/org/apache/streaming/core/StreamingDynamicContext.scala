@@ -22,7 +22,7 @@ class StreamingDynamicContext {
     this.emptyDataWaitTime = emptyDataWaitTime
   }
 
-  var kafkaDstream: KafkaDynamicDStream[_,_]= null
+  var kafkaDstream: KafkaDynamicDStream[_, _] = null
   /**
    * @author LMQ
    * @time 20190531
@@ -32,6 +32,9 @@ class StreamingDynamicContext {
     if (kafkaDstream == null) {
       log.error("kafkaDstream is Null ")
     } else {
+      for {
+        rateController <- kafkaDstream.rateController
+      } this.sc.sparkcontext.addSparkListener(rateController) //添加监听器
       while (!stop) {
         val startTime = new Date().getTime
         val hasData = kafkaDstream.generateJob()
