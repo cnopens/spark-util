@@ -25,6 +25,10 @@
 > 要确保编译的kafka-client的版本和服务器端的版本一致，否则会报 Error reading string of length 27489, only 475 bytes available 等错误<br/>
 -------------------
 
+-------------------
+> 添加了速率控制，KafkaRateController。用来控制读取速率，由于不是用的sparkstreaming，所有速率控制的一些参数拿不到，得自己去计算。<br> 
+-------------------
+
 
 * 提供 对外的 ssc创建 createDirectStream 的方法 ，用来读取kafka的数据。
 * 提供 对外的 ssc利用conf创建Dstream的方法
