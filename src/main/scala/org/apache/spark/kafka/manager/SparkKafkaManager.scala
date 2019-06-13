@@ -138,7 +138,6 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
         }
       } else fromOffset
     val untilOffsets = clamp(latestLeaderOffsets(consumerOffsets), consumerOffsets, maxMessagesPerPartition)
-    if (maxMessagesPerPartition.isDefined) maxMessagesPerPartition.get.foreach(println)
     KafkaDataRDD[K, V, KD, VD, R](
       sc,
       kp,
