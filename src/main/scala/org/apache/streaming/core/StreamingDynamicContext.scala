@@ -39,6 +39,7 @@ class StreamingDynamicContext {
         val startTime = new Date().getTime
         val hasData = kafkaDstream.generateJob()
         val endTime = new Date().getTime
+        kafkaDstream.onBatchCompleted()
         if (!hasData) {
           val costTime = endTime - startTime
           if (emptyDataWaitTime.milliseconds > costTime)
