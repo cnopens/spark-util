@@ -14,7 +14,7 @@ import org.apache.spark.streaming.scheduler.PIDRateEstimator
 
 /**
  * @author LinMingQiang
- * @time 2018-07-07
+ * @time 2019-06-01
  * @desc 不使用sparkstreaming的方式来做实时
  */
 private[streaming] class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
