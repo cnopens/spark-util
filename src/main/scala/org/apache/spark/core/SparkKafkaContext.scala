@@ -160,6 +160,21 @@ class SparkKafkaContext(var kp:Map[String,String]) {
       .createKafkaRDD[K, V](
         this, topics, null, maxMessagesPerPartition)
   }
+    /**
+   * @author LMQ
+   * @description 创建一个kafkaRDD。从kafka拉取数据
+   * @time 2019-06-08
+   * @param maxMessagesPerPartition : 控制各个分区获取的条数限制，为了ratecontroller准备
+   */
+  def kafkaRDD[K: ClassTag, V: ClassTag](
+    topics: Set[String],
+    fromOffset: Map[TopicAndPartition, Long],
+    maxMessagesPerPartition: Option[Map[TopicAndPartition, Long]]) = {
+    skm
+      .createKafkaRDD[K, V](
+        this, topics,fromOffset,maxMessagesPerPartition)
+  }
+
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
