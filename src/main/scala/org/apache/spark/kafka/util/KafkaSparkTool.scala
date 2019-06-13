@@ -64,6 +64,9 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
     if (excutorFixKp == null) {
       excutorFixKp = new java.util.HashMap[String, Object]()
       fixKp.foreach { case (x, y) => excutorFixKp.put(x, y) }
+      excutorFixKp.put(ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
+      excutorFixKp.put(AUTO_OFFSET_RESET_CONFIG, "none")
+      excutorFixKp.put(RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
       if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION)) {
         excutorFixKp.put(SparkKafkaContext.SSL_TRUSTSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION))
       }
@@ -71,8 +74,6 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
         excutorFixKp.put(SparkKafkaContext.SSL_KEYSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION))
       }
       fixKp.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
-      if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG)|| fixKp.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
-        fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
       fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
     }
     excutorFixKp

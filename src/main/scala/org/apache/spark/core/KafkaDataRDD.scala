@@ -41,6 +41,14 @@ class KafkaDataRDD[K: ClassTag, V: ClassTag](
    * @author LMQ
    * @desc 更新offset至zk
    */
+  def updateOffsets() {
+    sc.updateRDDOffsets(kafkaParam.get(GROUPID).toString(), this)
+  }
+
+    /**
+   * @author LMQ
+   * @desc 更新offset至zk
+   */
   def updateOffsets(kp: Map[String, String]): Boolean = {
     if (kp.contains(GROUPID)) {
       updateOffsets(kp(GROUPID))
