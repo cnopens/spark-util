@@ -9,40 +9,46 @@ import org.apache.spark.scheduler.SparkListenerStageCompleted
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.Duration
 import scala.collection.mutable.ArrayBuffer
+import scala.beans.BeanProperty
 
-class KafkaRateController(val rateEstimator: PIDRateEstimator)
-    extends SparkListener {
-  var jobUseTime  = new ArrayBuffer[Long] //实际的逻辑运行时间，但是一个streaming可以有多个job，要累加起来
+class KafkaRateController(val rateEstimator: PIDRateEstimator) extends SparkListener {
+  var jobUseTime = new ArrayBuffer[Long] //实际的逻辑运行时间，但是一个streaming可以有多个job，要累加起来
   var jobStartTime = -1L
   var jobLastEndTime = -1L
-  var batchSubmitTime = -1L //batch的启动时间
   var scheduleDelay = new ArrayBuffer[Long]
   var rateLimit: Long = 0L
+  @BeanProperty
+  var batchSubmitTime = -1L //batch的启动时间
+  @BeanProperty
   var currentElems = 0L
-  
-  def setBatchSubmitTime(batchSubmitTime:Long){
-    this.batchSubmitTime=batchSubmitTime
-  }
-  
-  def setCurrentElems(currentElems:Long){
-    this.currentElems=currentElems
-  }
+  /**
+   * @author LinMingQiang
+   * @time 2019-06-16
+   * @desc job开始时执行，一个active一个job
+   */
   override def onJobStart(jobStart: SparkListenerJobStart) {
     jobStartTime = new Date().getTime
-    if(jobLastEndTime > 0){
-    	 scheduleDelay.+=(jobStartTime - jobLastEndTime)
-    }else {
-       scheduleDelay.+=(jobStartTime - batchSubmitTime)
+    if (jobLastEndTime > 0) {
+      scheduleDelay.+=(jobStartTime - jobLastEndTime)
+    } else {
+      scheduleDelay.+=(jobStartTime - batchSubmitTime)
     }
   }
+  /**
+   * @author LinMingQiang
+   * @time 2019-06-16
+   * @desc job结束时执行，一个active一个job
+   */
   override def onJobEnd(jobEnd: SparkListenerJobEnd) {
-     jobLastEndTime = new Date().getTime
+    jobLastEndTime = new Date().getTime
     jobUseTime.+=(jobLastEndTime - jobStartTime)
   }
   /**
-   * Compute the new rate limit and publish it asynchronously.
+   * @author LinMingQiang
+   * @time 2019-06-16
+   * @desc 计算下一批数据拉取速率
    */
-  private def computeAndPublish(
+  private def computeRate(
     time: Long,
     elems: Long,
     workDelay: Long,
@@ -52,15 +58,19 @@ class KafkaRateController(val rateEstimator: PIDRateEstimator)
     }
 
   }
-  
-  def onBatchCompleted(){
+  /**
+   * @author LinMingQiang
+   * @time 2019-06-16
+   * @desc 当前批次结束时计算速率和初始化
+   */
+  def onBatchCompleted() {
     val totalJobUseTime = jobUseTime.sum
     val totalScheduleDelay = scheduleDelay.sum
-    computeAndPublish(new Date().getTime, currentElems, totalJobUseTime, totalScheduleDelay)
+    computeRate(new Date().getTime, currentElems, totalJobUseTime, totalScheduleDelay)
     jobUseTime.clear()
     scheduleDelay.clear()
     jobLastEndTime = -1L
-    
+
   }
   def getLatestRate(): Long = rateLimit
 
