@@ -9,7 +9,7 @@ import org.apache.spark.streaming.kafka.KafkaCluster
 import org.apache.spark.core.SparkKafkaContext
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import scala.collection.JavaConversions._
-
+import scala.collection.mutable.HashMap
 /**
  * @author LMQ
  * @description 读取kafka，操作offset等操作工具
@@ -20,8 +20,8 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   lazy val defualtFrom: String = "LAST"
   lazy val log = LoggerFactory.getLogger(logname)
   var kp: Map[String, String]
-  lazy val kc: KafkaCluster = new KafkaCluster(kp)
   lazy val fixKp = fixKafkaParams(kp)
+  lazy val kc: KafkaCluster = new KafkaCluster(fixKp.map{case(k,v)=>k->v.toString}.toMap)
   var excutorFixKp: java.util.HashMap[String, Object] = null //用于excutor的配置
   /**
    * @author LMQ
@@ -37,10 +37,10 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
    * @desc 修正kp的配置
    */
   def fixKafkaParams(kafkaParams: Map[String, String]) = {
-    val fixKp = new java.util.HashMap[String, Object]()
+    val fixKp = new HashMap[String, Object]()
     kafkaParams.foreach { case (x, y) => fixKp.put(x, y) }
     fixKp.put(ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
-    fixKp.put(AUTO_OFFSET_RESET_CONFIG, "none")
+    fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "none")
     fixKp.put(RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
     if (fixKp.containsKey(DRIVER_SSL_TRUSTSTORE_LOCATION)) {
       fixKp.put(SSL_TRUSTSTORE_LOCATION, fixKp.get(DRIVER_SSL_TRUSTSTORE_LOCATION).toString())
@@ -48,10 +48,8 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
     if (fixKp.containsKey(DRIVER_SSL_KEYSTORE_LOCATION)) {
       fixKp.put(SSL_KEYSTORE_LOCATION, fixKp.get(DRIVER_SSL_KEYSTORE_LOCATION).toString())
     }
-    fixKp.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
-    if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG)|| fixKp.get(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
-      fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
-    fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
+    if (!fixKp.containsKey(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG)|| fixKp(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG) == "none")
+      fixKp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "largest")
     fixKp
   }
 
@@ -64,17 +62,13 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
     if (excutorFixKp == null) {
       excutorFixKp = new java.util.HashMap[String, Object]()
       fixKp.foreach { case (x, y) => excutorFixKp.put(x, y) }
-      excutorFixKp.put(ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
       excutorFixKp.put(AUTO_OFFSET_RESET_CONFIG, "none")
-      excutorFixKp.put(RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
       if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION)) {
         excutorFixKp.put(SparkKafkaContext.SSL_TRUSTSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_TRUSTSTORE_LOCATION))
       }
       if (excutorFixKp.containsKey(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION)) {
         excutorFixKp.put(SparkKafkaContext.SSL_KEYSTORE_LOCATION, excutorFixKp(SparkKafkaContext.EXECUTOR_SSL_KEYSTORE_LOCATION))
       }
-      fixKp.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false: java.lang.Boolean)
-      fixKp.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 65536: java.lang.Integer)
     }
     excutorFixKp
   }
