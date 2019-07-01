@@ -13,7 +13,7 @@ trait SparkKafkaConfsKey {
     * 从last还是从consumer开始
     */
    val CONSUMER_FROM="kafka.consumer.from"
-   
+   val DEFAULT_FROM = CONSUM
    val KAFKAOFFSET="kafka.offset"
    val MAX_RATE_PER_PARTITION="spark.streaming.kafka.maxRatePerPartition"
    

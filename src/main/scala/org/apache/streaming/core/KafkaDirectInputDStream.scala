@@ -70,7 +70,7 @@ private[streaming] class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <:
    */
   override def batchRDD() = {
     val lastOffset = ssc.sc.getLastOffset(topics)
-    val kafkardd = ssc.sc.kafkaRDD[K, V, KD, VD, R](topics, currentOffsets, maxMessagesPerPartition(lastOffset), msghandle)
+    val kafkardd = ssc.sc.kafkaRDD[K, V, KD, VD, R](topics, currentOffsets,maxMessagesPerPartition(lastOffset), msghandle)
     rateController.foreach { x => x.setCurrentElems(kafkardd.count()) }
     currentOffsets = kafkardd.getRDDOffsets()
     //设置批次启动时间
@@ -111,7 +111,6 @@ private[streaming] class KafkaDirectInputDStream[K: ClassTag, V: ClassTag, KD <:
         }
       case None => lastOffset.map { case (tp, offset) => tp -> maxRateLimitPerPartition }
     }
-
     if (effectiveRateLimitPerPartition.values.sum > 0) {
       val secsPerBatch = ssc.emptyDataWaitTime.milliseconds.toDouble / 1000
       Some(effectiveRateLimitPerPartition.map {
