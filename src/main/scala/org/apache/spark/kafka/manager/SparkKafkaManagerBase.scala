@@ -7,11 +7,7 @@ import org.apache.spark.streaming.kafka010.HasOffsetRanges
 import org.apache.spark.kafka.util.KafkaSparkTool
 
 trait SparkKafkaManagerBase extends KafkaSparkTool{
-  val LAST="LAST"
-  val CONSUM="CONSUM"
-  val EARLIEST="EARLIEST"
-  val CUSTOM="CUSTOM"
-  val KAFKA_OFFSET="kafka.offset"
+
   override var kp:Map[String, String]
   /**
    * @author LMQ
