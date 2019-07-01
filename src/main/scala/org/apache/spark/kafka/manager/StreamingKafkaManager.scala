@@ -52,9 +52,8 @@ class StreamingKafkaManager(override var kp:Map[String, String])
     val groupId = kp.get(GROUPID).get
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {
-        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
-        else defualtFrom
-        last.toUpperCase match {
+        val fromWhere = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get else DEFUALT_FROM
+        fromWhere.toUpperCase match {
           case LAST     => getLatestOffsets(topics)
           case EARLIEST => getEarliestOffsets(topics)
           case CONSUM   => getConsumerOffset(groupId, topics)
@@ -96,10 +95,9 @@ class StreamingKafkaManager(override var kp:Map[String, String])
     val topics = conf.topics
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {
-        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
-        else if (conf.containsKey(CONSUMER_FROM)) conf.get(CONSUMER_FROM)
-        else defualtFrom
-        last.toUpperCase match {
+        val fromWhere = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get else if (conf.containsKey(CONSUMER_FROM)) conf.get(CONSUMER_FROM)
+        else DEFUALT_FROM
+        fromWhere.toUpperCase match {
           case LAST     => getLatestOffsets(topics)
           case EARLIEST => getEarliestOffsets(topics)
           case CONSUM   => getConsumerOffset(groupId, topics)
