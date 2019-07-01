@@ -41,9 +41,8 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
     val groupId = kp.get(GROUPID).get
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {
-        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
-        else defualtFrom
-        last.toUpperCase match {
+        val fromWhere = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get else DEFAULT_FROM
+        fromWhere.toUpperCase match {
           case LAST     => getLatestOffsets(topics)
           case CONSUM   => getConsumerOffset(groupId, topics)
           case EARLIEST => getEarliestOffsets(topics)
@@ -85,9 +84,8 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
     val groupId = kp.get(GROUPID).get
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {
-        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
-        else defualtFrom
-        last.toUpperCase match {
+        val fromWhere = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get else DEFAULT_FROM
+        fromWhere.toUpperCase match {
           case LAST     => getLatestOffsets(topics)
           case CONSUM   => getConsumerOffset(groupId, topics)
           case EARLIEST => getEarliestOffsets(topics)
@@ -126,9 +124,8 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
     val groupId = kp.get(GROUPID).get
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {
-        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
-        else defualtFrom
-        last.toUpperCase match {
+        val fromWhere = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get else DEFAULT_FROM
+        fromWhere.toUpperCase match {
           case LAST     => getLatestOffsets(topics)
           case CONSUM   => getConsumerOffset(groupId, topics)
           case EARLIEST => getEarliestOffsets(topics)
@@ -144,7 +141,7 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
       untilOffsets,
       messageHandler)
   }
- /**
+  /**
    * @author LMQ
    * @time 2018.03.07
    * @description 创建一个 kafkaDataRDD
@@ -160,15 +157,14 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
     sc: SparkKafkaContext,
     topics: Set[String],
     fromOffset: Map[TopicAndPartition, Long],
-    untilOffset:Map[TopicAndPartition, Long],
+    untilOffset: Map[TopicAndPartition, Long],
     messageHandler: MessageAndMetadata[K, V] => R): KafkaDataRDD[K, V, KD, VD, R] = {
     if (kp == null || !kp.contains(GROUPID)) throw new SparkException(s"kafkaParam is Null or ${GROUPID} is not setted")
     val groupId = kp.get(GROUPID).get
     val consumerOffsets: Map[TopicAndPartition, Long] =
       if (fromOffset == null) {
-        val last = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get
-        else defualtFrom
-        last.toUpperCase match {
+        val fromWhere = if (kp.contains(CONSUMER_FROM)) kp.get(CONSUMER_FROM).get else DEFAULT_FROM
+        fromWhere.toUpperCase match {
           case LAST     => getLatestOffsets(topics)
           case CONSUM   => getConsumerOffset(groupId, topics)
           case EARLIEST => getEarliestOffsets(topics)
@@ -176,8 +172,8 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String]) ext
           case _        => log.info(s"""${CONSUMER_FROM} must LAST or CONSUM,defualt is LAST"""); getLatestOffsets(topics)
         }
       } else fromOffset
-    val lastOffsets=latestLeaderOffsets(consumerOffsets)
-    val untilOffsets=untilOffset.map{case(tp,l)=>tp -> lastOffsets(tp).copy(offset = l)}
+    val lastOffsets = latestLeaderOffsets(consumerOffsets)
+    val untilOffsets = untilOffset.map { case (tp, l) => tp -> lastOffsets(tp).copy(offset = l) }
     KafkaDataRDD[K, V, KD, VD, R](
       sc,
       kp,
