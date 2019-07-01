@@ -7,26 +7,26 @@
 # 说明
 
 -------------------
-> 支持动态调节 streaming 的 批次间隔时间 （不同于sparkstreaming 的 定长的批次间隔） <br/>
-> 支持在streaming过程中 重设 topics，用于生产中动态地增加删减数据源 <br/>
-> 提供spark-streaming-kafka-0-10_2.10 spark 1.6 来支持 kafka的ssl <br/>
-> 支持rdd.updateOffset 来管理偏移量。 <br/>
+> - 支持动态调节 streaming 的 批次间隔时间 （不同于sparkstreaming 的 定长的批次间隔，StructuredStreaming中使用trigger实现了。） <br/>
+> - 支持在streaming过程中 重设 topics，用于生产中动态地增加删减数据源 <br/>
+> - 提供spark-streaming-kafka-0-10_2.10 spark 1.6 来支持 kafka的ssl <br/>
+> - 支持rdd.updateOffset 来管理偏移量。 <br/>
 -------------------
 
 -------------------
-> 由于kakfa-010 的api的变化，之前的 kafka-08 版本的 spark-kafka 虽然能用，但是他依赖于spark-streaming-kafka-0-8_2.10 <br/>.(可能会导致一些版本问题)；所以这次重新写了一个 kafka010 & spark-2.x 版本 ；但是使用方法还是跟之前的差不多， <br/>
+> - 由于kakfa-010 的api的变化，之前的 kafka-08 版本的 spark-kafka 虽然能用，但是他依赖于spark-streaming-kafka-0-8_2.10 <br/>.(可能会导致一些版本问题)；所以这次重新写了一个 kafka010 & spark-2.x 版本 ；但是使用方法还是跟之前的差不多， <br/>
 -------------------
 
 -------------------
-> kafka010有两种来管理offset的方式，一种是旧版的用zookeeper来管理，一种是本身自带的。现只提供zookeeper的管理方式
+> - kafka010有两种来管理offset的方式，一种是旧版的用zookeeper来管理，一种是本身自带的。现只提供zookeeper的管理方式
 -------------------
 
 -------------------
-> 要确保编译的kafka-client的版本和服务器端的版本一致，否则会报 Error reading string of length 27489, only 475 bytes available 等错误<br/>
+> - 要确保编译的kafka-client的版本和服务器端的版本一致，否则会报 Error reading string of length 27489, only 475 bytes available 等错误<br/>
 -------------------
 
 -------------------
-> 添加了速率控制，KafkaRateController。用来控制读取速率，由于不是用的sparkstreaming，所有速率控制的一些参数拿不到，得自己去计算。<br> 
+> - 添加了速率控制，KafkaRateController。用来控制读取速率，由于不是用的sparkstreaming，所有速率控制的一些参数拿不到，得自己去计算。<br> 
 -------------------
 
 
@@ -50,6 +50,24 @@
 
 
   
+#  StreamingDynamicContext
+> 动态调整批次时间的流式计算（不基于streamingContext）
+> 例如设置批次时间为5s钟，StreamingContex 是严格的5s钟一次。 而StreamingDynamicContext 可以由用户设定，在当前批次任务完成后，是否马上启动下一个批  次的计算。。建议可以根据 当前批次的rdd.cou > 0 来判断是否马上执行下一批次
+```
+    val kp = SparkKafkaContext.getKafkaParam( brokers,groupId,"consum", "last")
+    val topics = Set("test")
+    val skc = new SparkKafkaContext(kp,new SparkConf()
+    .setMaster("local")
+    .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10")  //kafka每个分区最大拉区数量
+    .setAppName("SparkKafkaContextTest"))
+    val sskc = new StreamingDynamicContext(skc, Seconds(2))   //如果 kafka没有数据则等待2s。否则马上执行下一批次任务
+    val kafkastream = sskc.createKafkaDstream[String, String, StringDecoder, StringDecoder, (String, String)](topics, msgHandle)
+    kafkastream.foreachRDD { case (rdd) =>
+       rdd.map(x => x._2).collect().foreach { println }
+       rdd.count > 0 //是否马上执行下个批次。否则就等到下一批次时间到来，如果 count>0 说明kafka有数据，可以马上执行而不需要等待浪费时间，让你的流式更实时
+    }
+    sskc.start()
+```
 # Example StreamingKafkaContextTest
 > StreamingKafkaContextTest 流式 
 ```
