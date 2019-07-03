@@ -1,7 +1,7 @@
 # spark-kafka
 
 **scala version 2.11** <br/>
-**spark version 2.0.1** <br/>
+**spark version 2.x** <br/>
 **kafka version 0.10** <br/>
 
 # 说明
