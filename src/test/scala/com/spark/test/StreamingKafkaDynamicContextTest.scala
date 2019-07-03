@@ -30,7 +30,7 @@ object StreamingDynamicContextTest {
       .setMaster("local")
       .set("spark.streaming.backpressure.enabled", "true") //是否启动背压
       .set("spark.streaming.backpressure.pid.minRate", "1") //最低速率
-      .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "100")
+      .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10")
       .set("spark.streaming.kafka.consumer.poll.ms", "60000") //从earliest 或者kafka堆积数据过多会报poll 512错误
       .setAppName("SparkKafkaContextTest"))
     val sskc = new StreamingDynamicContext(skc, Seconds(10))

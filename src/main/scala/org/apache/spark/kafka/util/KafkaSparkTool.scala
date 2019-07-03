@@ -17,8 +17,8 @@ import scala.collection.mutable.HashMap
  */
 private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   var logname = "KafkaSparkTool" //外部可重写
-  lazy val log = LoggerFactory.getLogger(logname)
   var kp: Map[String, String]
+  lazy val log = LoggerFactory.getLogger(logname)
   lazy val fixKp = fixKafkaParams(kp)
   lazy val kc: KafkaCluster = new KafkaCluster(fixKp.map{case(k,v)=>k->v.toString}.toMap)
   var excutorFixKp: java.util.HashMap[String, Object] = null //用于excutor的配置

@@ -8,7 +8,6 @@ import org.apache.spark.kafka.util.KafkaSparkTool
 
 trait SparkKafkaManagerBase extends KafkaSparkTool{
 
-  override var kp:Map[String, String]
   /**
    * @author LMQ
    * @description 获取RDD的offset。但这个rdd必须继承HasOffsetRanges 的
