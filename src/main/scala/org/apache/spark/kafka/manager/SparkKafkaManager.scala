@@ -30,7 +30,7 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String])
    * @description 创建一个 kafkaDataRDD
    * @description 这个kafkaDataRDD是自己定义的，可以自己添加很多自定义的功能（如：更新offset）
    * @description 读取kafka数据有四种方式：
-   * @param 1 ： 从最新开始  = LAST
+   *  1 ： 从最新开始  = LAST
    * 				2 ：从上次消费开始  = CONSUM
    * 				3:从最早的offset开始消费  = EARLIEST
    * 				4：从自定义的offset开始  = CUSTOM
@@ -72,7 +72,7 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String])
    * @description 创建一个 kafkaDataRDD
    * @description 这个kafkaDataRDD是自己定义的，可以自己添加很多自定义的功能（如：更新offset）
    * @description 读取kafka数据有四种方式：
-   * @param 1 ： 从最新开始  = LAST
+   *  1 ： 从最新开始  = LAST
    * 				2 ：从上次消费开始  = CONSUM
    * 				3:从最早的offset开始消费  = EARLIEST
    * 				4：从自定义的offset开始  = CUSTOM
@@ -112,7 +112,7 @@ private[spark] class SparkKafkaManager(override var kp: Map[String, String])
    * @description 创建一个 kafkaDataRDD
    * @description 这个kafkaDataRDD是自己定义的，可以自己添加很多自定义的功能（如：更新offset）
    * @description 读取kafka数据有四种方式：
-   * @param 1 ： 从最新开始  = LAST
+   *  1 ： 从最新开始  = LAST
    * 				2 ：从上次消费开始  = CONSUM
    * 				3:从最早的offset开始消费  = EARLIEST
    * 				4：从自定义的offset开始  = CUSTOM

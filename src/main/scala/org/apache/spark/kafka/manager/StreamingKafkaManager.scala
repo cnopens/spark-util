@@ -37,10 +37,8 @@ class StreamingKafkaManager(override var kp:Map[String, String])
    * @author LMQ
    * @description 创建一个kafka的Dstream。
    * @param ssc ： 一个StreamingContext
-   * @param kp : kafka的配置信息 (不知道怎么配，可以看示例)
    * @param topics ： kakfa的topic列表
    * @param fromOffset ： 如果想自己自定义从指定的offset开始读的话，传入这个值
-   * @param msghandle： 读取kafka时提取的数据
    */
   def createDirectStream[K: ClassTag, V: ClassTag](
     ssc: StreamingContext,
@@ -77,7 +75,6 @@ class StreamingKafkaManager(override var kp:Map[String, String])
    * @param ssc ： 一个StreamingContext
    * @param conf : 配置信息 (不知道怎么配，可以看示例)
    * @param fromOffset ： 如果想自己自定义从指定的offset开始读的话，传入这个值
-   * @param msghandle： 读取kafka时提取的数据
    */
   def createDirectStream[K: ClassTag, V: ClassTag](
     ssc: StreamingContext,

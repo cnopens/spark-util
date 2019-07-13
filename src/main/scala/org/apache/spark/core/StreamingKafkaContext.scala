@@ -93,10 +93,8 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    /**
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
-   * @param kp:kafka配置
    * @param topics：topic列表
    * @param fromOffset ： 读取数据的offset起点
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream(
     topics: Set[String],
@@ -109,10 +107,8 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
      /**
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
-   * @param kp:kafka配置
    * @param topics：topic列表
    * @param fromOffset ： 读取数据的offset起点
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream[K: ClassTag, V: ClassTag](
     topics: Set[String],
@@ -125,9 +121,7 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
   /**
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
-   * @param kp:kafka配置
    * @param topics：topic列表
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream[K: ClassTag, V: ClassTag](
     topics: Set[String]
@@ -139,9 +133,7 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
     /**
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
-   * @param kp:kafka配置
    * @param topics：topic列表
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream(
     topics: Set[String]
@@ -155,7 +147,6 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    * @description 从kafka使用direct的方式获取数据
    * @param conf ： 包含kp和topics
    * @param fromOffset ： 读取数据的offset起点
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream(
     conf: KafkaConfig,
@@ -170,7 +161,6 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    * @description 从kafka使用direct的方式获取数据
    * @param conf ： 包含kp和topics
    * @param fromOffset ： 读取数据的offset起点
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream[K: ClassTag, V: ClassTag](
     conf: KafkaConfig,
@@ -184,7 +174,6 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
    * @param conf ： 包含kp和topics
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream[K: ClassTag, V: ClassTag](
     conf: KafkaConfig
@@ -195,7 +184,6 @@ class StreamingKafkaContext(var kp:Map[String,String]) {
    * @author LMQ
    * @description 从kafka使用direct的方式获取数据
    * @param conf ： 包含kp和topics
-   * @param msgHandle ：读取kafka数据的方法
    */
   def createDirectStream(
     conf: KafkaConfig

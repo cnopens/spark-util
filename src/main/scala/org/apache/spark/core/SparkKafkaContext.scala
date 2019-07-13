@@ -109,7 +109,6 @@ class SparkKafkaContext(var kp:Map[String,String]) {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    */
   def kafkaRDD[K: ClassTag, V: ClassTag](topics: Set[String]) = {
@@ -119,10 +118,8 @@ class SparkKafkaContext(var kp:Map[String,String]) {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param fromOffset: 拉取数据的起始offset
-   * @param msgHandle：拉取哪些kafka数据
    */
   def kafkaRDD[K: ClassTag, V: ClassTag](
     topics: Set[String],
@@ -134,7 +131,6 @@ class SparkKafkaContext(var kp:Map[String,String]) {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param fromOffset: 拉取数据的起始offset
    */
@@ -148,7 +144,6 @@ class SparkKafkaContext(var kp:Map[String,String]) {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param maxMessagesPerPartition:每个分区最多拉取多少条
    * @attention 这里没有传 msgHandle 则使用默认的msgHandle （输出为Tuple2(topic,msg）
@@ -178,7 +173,6 @@ class SparkKafkaContext(var kp:Map[String,String]) {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param maxMessagesPerPartition:每个分区最多拉取多少条
    * @attention 这里没有传 msgHandle 则使用默认的msgHandle （输出为Tuple2(topic,msg）
