@@ -9,13 +9,13 @@ class PIDRateEstimator(
     integral: Double,
     derivative: Double,
     minRate: Double
-  ){
+) {
 
   private var firstRun: Boolean = true
   private var latestTime: Long = -1L
   private var latestRate: Double = -1D
   private var latestError: Double = -1L
- def getLatestRate()={
+  def getLatestRate() = {
     latestRate
   }
   require(
@@ -24,24 +24,18 @@ class PIDRateEstimator(
   require(
     proportional >= 0,
     s"Proportional term $proportional in PIDRateEstimator should be >= 0.")
-  require(
-    integral >= 0,
-    s"Integral term $integral in PIDRateEstimator should be >= 0.")
-  require(
-    derivative >= 0,
-    s"Derivative term $derivative in PIDRateEstimator should be >= 0.")
-  require(
-    minRate > 0,
-    s"Minimum rate in PIDRateEstimator should be > 0")
-
-
+  require(integral >= 0,
+          s"Integral term $integral in PIDRateEstimator should be >= 0.")
+  require(derivative >= 0,
+          s"Derivative term $derivative in PIDRateEstimator should be >= 0.")
+  require(minRate > 0, s"Minimum rate in PIDRateEstimator should be > 0")
 
   def compute(
       time: Long, // in milliseconds
       numElements: Long,
       processingDelay: Long, // in milliseconds
       schedulingDelay: Long // in milliseconds
-    ): Option[Double] = {
+  ): Option[Double] = {
     this.synchronized {
       if (time > latestTime && numElements > 0 && processingDelay > 0) {
 
@@ -68,10 +62,10 @@ class PIDRateEstimator(
 
         // in elements/(second ^ 2)
         val dError = (error - latestError) / delaySinceUpdate
-        
+
         val newRate = (latestRate - proportional * error -
-                                    integral * historicalError -
-                                    derivative * dError).max(minRate)
+          integral * historicalError -
+          derivative * dError).max(minRate)
         latestTime = time
         if (firstRun) {
           latestRate = processingRate
@@ -90,24 +84,34 @@ class PIDRateEstimator(
   }
 }
 object PIDRateEstimator {
+
   /**
-   * Return a new `RateEstimator` based on the value of
-   * `spark.streaming.backpressure.rateEstimator`.
-   *
-   * The only known and acceptable estimator right now is `pid`.
-   *
-   * @return An instance of RateEstimator
-   * @throws IllegalArgumentException if the configured RateEstimator is not `pid`.
-   */
+    * Return a new `RateEstimator` based on the value of
+    * `spark.streaming.backpressure.rateEstimator`.
+    *
+    * The only known and acceptable estimator right now is `pid`.
+    *
+    * @return An instance of RateEstimator
+    * @throws IllegalArgumentException if the configured RateEstimator is not `pid`.
+    */
   def create(conf: SparkConf, batchInterval: Duration) =
     conf.get("spark.streaming.backpressure.rateEstimator", "pid") match {
       case "pid" =>
-        val proportional = conf.getDouble("spark.streaming.backpressure.pid.proportional", 1.0)
-        val integral = conf.getDouble("spark.streaming.backpressure.pid.integral", 0.2)
-        val derived = conf.getDouble("spark.streaming.backpressure.pid.derived", 0.0)
-        val minRate = conf.getDouble("spark.streaming.backpressure.pid.minRate", 100)
-        new PIDRateEstimator(batchInterval.milliseconds, proportional, integral, derived, minRate)
+        val proportional =
+          conf.getDouble("spark.streaming.backpressure.pid.proportional", 1.0)
+        val integral =
+          conf.getDouble("spark.streaming.backpressure.pid.integral", 0.2)
+        val derived =
+          conf.getDouble("spark.streaming.backpressure.pid.derived", 0.0)
+        val minRate =
+          conf.getDouble("spark.streaming.backpressure.pid.minRate", 100)
+        new PIDRateEstimator(batchInterval.milliseconds,
+                             proportional,
+                             integral,
+                             derived,
+                             minRate)
       case estimator =>
-        throw new IllegalArgumentException(s"Unknown rate estimator: $estimator")
+        throw new IllegalArgumentException(
+          s"Unknown rate estimator: $estimator")
     }
-  }
+}

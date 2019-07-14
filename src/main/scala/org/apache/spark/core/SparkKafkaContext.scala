@@ -133,7 +133,6 @@ class SparkKafkaContext() {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param msgHandle：拉取哪些kafka数据
    */
@@ -161,7 +160,6 @@ class SparkKafkaContext() {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param msgHandle：拉取哪些kafka数据
    */
@@ -178,7 +176,6 @@ class SparkKafkaContext() {
    * @param kp：kafka配置参数
    * @param topics： topics
    * @param fromOffset: 拉取数据的起始offset
-   * @param msgHandle：拉取哪些kafka数据
    */
   def kafkaRDD[K: ClassTag, V: ClassTag, KD <: Decoder[K]: ClassTag, VD <: Decoder[V]: ClassTag, R: ClassTag](
     topics: Set[String],
@@ -207,7 +204,6 @@ class SparkKafkaContext() {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param fromOffset: 拉取数据的起始offset
    */
@@ -222,7 +218,6 @@ class SparkKafkaContext() {
    * @author LMQ
    * @time 2019-06-13
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param fromOffset: 拉取数据的起始offset
    * @param untilOffset : 结束offset
@@ -238,13 +233,12 @@ class SparkKafkaContext() {
     } else {
       skm
         .createKafkaRDD[String, String, StringDecoder, StringDecoder, (String, String)](
-          this, topics, fromOffset, untilOffset, this.skm.msgHandle)
+          this, topics, fromOffset, untilOffset, this.skm.defautMsgHandle)
     }
   }
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param maxMessagesPerPartition:每个分区最多拉取多少条
    * @attention 这里没有传 msgHandle 则使用默认的msgHandle （输出为Tuple2(topic,msg）
@@ -260,7 +254,6 @@ class SparkKafkaContext() {
   /**
    * @author LMQ
    * @description 创建一个kafkaRDD。从kafka拉取数据
-   * @param kp：kafka配置参数
    * @param topics： topics
    * @param maxMessagesPerPartition:每个分区最多拉取多少条
    * @attention 这里没有传 msgHandle 则使用默认的msgHandle （输出为Tuple2(topic,msg）

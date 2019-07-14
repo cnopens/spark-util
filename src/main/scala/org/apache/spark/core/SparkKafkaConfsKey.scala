@@ -32,7 +32,7 @@ trait SparkKafkaConfsKey {
    * 			earliest ：从最早数据开始
    *      consum： 从上次消费点继续
    *      custom：自定义消费
-   * @param :wrong_from ：如果kafka的offset出现问题，导致你读不到，这里配置是从哪里开始读取
+   * @param wrong_from ：如果kafka的offset出现问题，导致你读不到，这里配置是从哪里开始读取
    * @param kafkaoffset ： 自定义offset
    */
   def getKafkaParam(

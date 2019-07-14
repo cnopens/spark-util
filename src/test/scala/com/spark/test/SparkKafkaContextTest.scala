@@ -8,21 +8,22 @@ import org.apache.spark.common.util.Configuration
 
 object SparkKafkaContextTest {
   def main(args: Array[String]): Unit = {
-    val groupId = "dataflow-fg"
+    val groupId = "test"
     val kp = SparkKafkaContext.getKafkaParam(
       brokers,
       groupId,
       "earliest", // last/consum/custom/earliest
       "earliest" //wrong_from
     )
-    val topics = Set("MST_422")
+    val topics = Set("smartadsdeliverylog")
     val skc = new SparkKafkaContext(
       kp,
       new SparkConf()
         .setMaster("local")
         .set(SparkKafkaContext.MAX_RATE_PER_PARTITION, "10")
         .setAppName("SparkKafkaContextTest"))
-    val kafkadataRdd = skc.kafkaRDD[((String, Int, Long), String)](topics, msgHandle2) //根据配置开始读取
+    val kafkadataRdd =
+      skc.kafkaRDD[((String, Int, Long), String)](topics, msgHandle2) //根据配置开始读取
     //RDD.rddToPairRDDFunctions(kafkadataRdd)
     kafkadataRdd.foreach(println)
     kafkadataRdd.getRDDOffsets().foreach(println)

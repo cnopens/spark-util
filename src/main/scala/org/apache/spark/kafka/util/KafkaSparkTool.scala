@@ -29,7 +29,6 @@ private[spark] trait KafkaSparkTool extends SparkKafkaConfsKey {
   /**
    * @author LMQ
    * @description 获取kakfa消费者的offset
-   * @param kp ： kafka的配置
    * @param groupId：组名，用于唯一识别kakfa消费者身份
    * @param topics ：操作的topic列表
    * @attention 有几种情况要注意：

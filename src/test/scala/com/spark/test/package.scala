@@ -8,7 +8,7 @@ package object test {
   val zookeeper = "solr1,solr2,mongodb3"
   //val brokers = "kafka1:9092,kafka2:9092,kafka3:9092"
   
-  val brokers = "kafka01:9092,kafka02:9092,kafka03:9092"
+  val brokers = "kafka-1:9092,kafka-2:9092,kafka-3:9092"
   val outTopic = "test"
   val producerConfig = {
     val p = new java.util.Properties()
